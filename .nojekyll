@@ -1,0 +1,102 @@
+{
+  "name": "Factura — Gestion Commerciale",
+  "short_name": "Factura",
+  "description": "Gestion de devis, commandes, bons de livraison et factures — 100% hors ligne",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1C1C1E",
+  "theme_color": "#B8963E",
+  "lang": "fr",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": [
+    "business",
+    "finance",
+    "productivity"
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-1.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 1"
+    },
+    {
+      "src": "screenshots/screenshot-2.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 2"
+    },
+    {
+      "src": "screenshots/screenshot-3.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 3"
+    },
+    {
+      "src": "screenshots/screenshot-4.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 4"
+    },
+    {
+      "src": "screenshots/screenshot-5.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 5"
+    },
+    {
+      "src": "screenshots/screenshot-6.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 6"
+    },
+    {
+      "src": "screenshots/screenshot-7.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 7"
+    },
+    {
+      "src": "screenshots/screenshot-8.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 8"
+    },
+    {
+      "src": "screenshots/screenshot-9.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 9"
+    },
+    {
+      "src": "screenshots/screenshot-10.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Factura — Écran 10"
+    }
+  ]
+}

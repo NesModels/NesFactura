@@ -289,13 +289,6 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 ::-webkit-scrollbar-thumb{background:var(--ivory4);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink4);}
 </style>
-  <!-- PWA -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
-  <link rel="apple-touch-icon" href="icons/icon-180.png">
-  <meta name="theme-color" content="#B8963E">
-  <meta name="msapplication-TileColor" content="#1C1C1E">
-  <meta name="msapplication-TileImage" content="icons/icon-144.png">
 </head>
 <body>
 
@@ -1877,6 +1870,8 @@ if(!params.platforms||!Array.isArray(params.platforms))params.platforms=['Ebay',
 ['Ebay','Etsy'].forEach(p=>{if(!params.platforms.includes(p))params.platforms.unshift(p);});
 let logoData = lsRaw(LS.logo);
 let seq = ls(LS.seq,{art:10,tiers:1,invV:{},invA:{},DC:{},CC:{},LC:{},FC:{},DF:{},CF:{},LF:{},FF:{}});
+let _idCounter=0;
+function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
 // ── Migrations de schéma ──

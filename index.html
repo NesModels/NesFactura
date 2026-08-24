@@ -552,7 +552,10 @@ tbody tr:hover td{background:var(--ivory2);}
 
   /* Fiche article : une colonne sur mobile */
   .art-info-grid{grid-template-columns:1fr!important;gap:0!important;}
+  .attr-grid{grid-template-columns:1fr!important;}
   .modal-art-fixed{max-width:none;}
+  /* Trois onglets doivent tenir sans déborder */
+  .art-tab{flex:1;padding:10px 4px!important;font-size:12px!important;text-align:center;}
 
   /* ── Blocs Client / Document repliables ── */
   .fold .card-title{
@@ -637,9 +640,32 @@ tbody tr:hover td{background:var(--ivory2);}
 
 /* Fiche article : deux colonnes pour tenir sans ascenseur.
    Gauche = identité et prix · Droite = classement et références. */
-.art-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+.art-info-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:24px;align-items:start;}
 .art-col{display:flex;flex-direction:column;min-width:0;}
 .art-col > *:last-child{margin-bottom:0;}
+
+
+/* Fiche article : aperçu photo plus grand, la colonne droite s'équilibre */
+#a-photo-wrap .thumb-placeholder,
+#a-photo-wrap img{
+  width:112px;height:112px;border-radius:var(--r8);object-fit:cover;font-size:30px;
+}
+.art-photo-row{display:flex;align-items:center;gap:14px;margin-top:6px;flex-wrap:wrap;}
+.art-photo-row .btn{flex-shrink:0;}
+
+/* Onglet Attributs : les types se répartissent sur la largeur disponible */
+.attr-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:12px;align-items:start;
+}
+/* Compteur d'attributs renseignés sur l'onglet */
+.art-tab-badge{
+  display:inline-block;min-width:17px;padding:1px 5px;margin-left:5px;
+  border-radius:9px;background:var(--gold);color:var(--ink);
+  font-size:10px;font-weight:800;line-height:15px;text-align:center;
+  vertical-align:middle;
+}
 .modal-art-fixed #art-panel-info,
 .modal-art-fixed #art-panel-nom{flex:1;}
 .modal-title{font-family:var(--font-display);font-size:18px;color:var(--ink);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--ivory3);}
@@ -739,9 +765,48 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 .badge-locked{background:#FEF3C7;color:#92400E;font-size:10px;padding:1px 7px;}
 .inv-locked td{opacity:.7;}
 
-.table-card table{table-layout:auto;width:100%;}
-.table-card td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px;}
-.table-card td:nth-child(4){white-space:normal;}/* colonne nom : peut wrapper */
+.table-card{max-width:100%;}
+/* Largeurs strictes : les colonnes respectent les width déclarées et
+   la table ne peut plus dépasser la largeur de l'écran. La désignation
+   absorbe l'espace restant. */
+.table-card table{table-layout:fixed;width:100%;}
+.table-card td{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.table-card th{overflow:hidden;text-overflow:ellipsis;}
+/* Désignation : seule colonne qui peut passer à la ligne */
+.table-card td:nth-child(4){white-space:normal;overflow-wrap:anywhere;}
+/* Attributs : les badges restent dans leur colonne */
+#panel-articles td:nth-child(5){white-space:normal;}
+#panel-articles td:nth-child(5) .badge{
+  max-width:100%;overflow:hidden;text-overflow:ellipsis;
+  display:inline-block;vertical-align:middle;
+}
+/* Actions : toujours visibles, jamais repoussées hors écran */
+#panel-articles td:last-child > div{flex-wrap:nowrap;justify-content:flex-end;}
+
+/* Ventes / Achats : la colonne tiers absorbe l'espace, les actions
+   restent visibles. TVA puis Date s'effacent avant tout débordement. */
+#panel-ventes td:nth-child(5),#panel-achats td:nth-child(5){
+  white-space:normal;overflow-wrap:anywhere;
+}
+#panel-ventes td:last-child > div,#panel-achats td:last-child > div{
+  flex-wrap:nowrap;justify-content:flex-end;
+}
+@media(min-width:901px) and (max-width:1240px){
+  #panel-ventes th:nth-child(7),#panel-ventes td:nth-child(7),
+  #panel-achats th:nth-child(7),#panel-achats td:nth-child(7){display:none;}
+}
+@media(min-width:901px) and (max-width:1100px){
+  #panel-ventes th:nth-child(4),#panel-ventes td:nth-child(4),
+  #panel-achats th:nth-child(4),#panel-achats td:nth-child(4){display:none;}
+}
+
+/* Écrans intermédiaires : on sacrifie l'unité puis le coût avant de déborder */
+@media(min-width:901px) and (max-width:1180px){
+  #panel-articles th:nth-child(9),#panel-articles td:nth-child(9){display:none;}
+}
+@media(min-width:901px) and (max-width:1040px){
+  #panel-articles th:nth-child(5),#panel-articles td:nth-child(5){display:none;}
+}
 
 .art-tab{background:none;border:none;border-bottom:3px solid transparent;padding:9px 18px;font-size:13px;font-weight:600;color:var(--ink4);cursor:pointer;margin-bottom:-2px;transition:color .15s,border-color .15s}
 .art-tab:hover{color:var(--ink)}
@@ -921,17 +986,17 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="table-card">
       <table>
         <thead><tr>
-          <th style="width:40px"></th>
-          <th style="width:28px"><input type="checkbox" onchange="selectAllArts(this.checked)" title="Tout sélectionner" style="vertical-align:middle"></th>
-          <th style="width:90px">Réf.</th>
+          <th style="width:36px"></th>
+          <th style="width:44px"><input type="checkbox" onchange="selectAllArts(this.checked)" title="Tout sélectionner" style="vertical-align:middle"></th>
+          <th style="width:74px">Réf.</th>
           <th>Désignation</th>
-          <th>Attributs</th>
-          <th style="width:90px;text-align:right">Prix vente</th>
-          <th style="width:90px;text-align:right">Coût rev.</th>
-          <th style="width:80px;text-align:right">Marge</th>
-          <th style="width:60px">Unité</th>
-          <th style="width:24px">🔒</th>
-          <th style="width:110px"></th>
+          <th style="width:170px">Attributs</th>
+          <th style="width:88px;text-align:right">Prix vente</th>
+          <th style="width:88px;text-align:right">Coût rev.</th>
+          <th style="width:78px;text-align:right">Marge</th>
+          <th style="width:62px">Unité</th>
+          <th style="width:32px">🔒</th>
+          <th style="width:104px"></th>
         </tr></thead>
         <tbody id="art-tbody"></tbody>
       </table>
@@ -2118,6 +2183,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <!-- ONGLETS -->
     <div style="display:flex;gap:0;border-bottom:2px solid var(--ivory3);margin-bottom:18px">
       <button id="art-tab-info" class="art-tab art-tab-active" onclick="switchArtTab('info')">📋 Informations</button>
+      <button id="art-tab-attr" class="art-tab" onclick="switchArtTab('attr')">🏷 Attributs</button>
       <button id="art-tab-nom" class="art-tab" onclick="switchArtTab('nom')">🔧 Nomenclature</button>
     </div>
 
@@ -2170,12 +2236,8 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 
     <div class="art-col">
       <div class="form-group" style="margin-bottom:14px">
-        <label>Attributs</label>
-        <div id="a-tagvalues-wrap" style="display:flex;flex-direction:column;gap:10px;margin-top:6px"></div>
-      </div>
-      <div class="form-group" style="margin-bottom:14px">
         <label>Photo</label>
-        <div style="display:flex;align-items:center;gap:12px;margin-top:4px">
+        <div class="art-photo-row">
           <div id="a-photo-wrap"><div class="thumb-placeholder">🖼</div></div>
           <label class="btn btn-sm" style="cursor:pointer">Choisir…<input type="file" id="a-photo-file" accept="image/*" style="display:none" onchange="loadArticlePhoto(this)"></label>
           <button class="btn btn-sm btn-danger" id="a-photo-rm" style="display:none" onclick="removeArticlePhoto()">✕ Retirer</button>
@@ -2190,7 +2252,24 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div><!-- /art-info-grid -->
     </div>
 
-    <!-- ONGLET 2 : NOMENCLATURE -->
+    <!-- ONGLET 2 : ATTRIBUTS -->
+    <div id="art-panel-attr" style="display:none">
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:18px">
+        Classez cet article selon vos attributs personnalisés (échelle, gamme, matière…).
+        Ces valeurs alimentent les filtres du catalogue et la répartition du chiffre d'affaires
+        dans les statistiques.
+      </p>
+      <div id="a-tagvalues-wrap" class="attr-grid"></div>
+      <div id="a-tagvalues-empty" style="display:none;text-align:center;padding:32px 16px;color:var(--ink4)">
+        <div style="font-size:32px;margin-bottom:10px;opacity:.5">🏷</div>
+        <p style="font-size:13px;margin-bottom:14px">Aucun attribut n'est encore défini.</p>
+        <button class="btn btn-sm" onclick="closeModal('modal-art');go('categories')">
+          Créer un attribut
+        </button>
+      </div>
+    </div>
+
+    <!-- ONGLET 3 : NOMENCLATURE -->
     <div id="art-panel-nom" style="display:none">
       <p style="font-size:13px;color:var(--ink3);margin-bottom:16px">
         Listez les composants de cet article (matières premières, consommables, sous-traitance…).
@@ -2408,7 +2487,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.5.1';
+const APP_VERSION = '1.6.0';
 const APP_DATE    = '2026-08-24';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -2820,6 +2899,15 @@ function selectAllArts(checked){
 function renderArtTagValuesWidget(){
   const wrap=document.getElementById('a-tagvalues-wrap');
   if(!wrap)return;
+  // Aucun attribut défini : proposer d'en créer plutôt qu'un écran vide
+  const empty=document.getElementById('a-tagvalues-empty');
+  if(!tagTypes.length){
+    wrap.innerHTML='';
+    if(empty)empty.style.display='block';
+    updateArtTabBadge();
+    return;
+  }
+  if(empty)empty.style.display='none';
   wrap.innerHTML=tagTypes.map(tt=>{
     const selected=editArtTagValues[tt.id]||[];
     return `<div style="border:1px solid var(--ivory3);border-radius:var(--r8);padding:10px 12px;background:var(--ivory2)">
@@ -2833,7 +2921,17 @@ function renderArtTagValuesWidget(){
       </div>
     </div>`;
   }).join('');
+  updateArtTabBadge();
 }
+
+// Nombre d'attributs renseignés, affiché sur l'onglet
+function updateArtTabBadge(){
+  const tab=document.getElementById('art-tab-attr');
+  if(!tab)return;
+  const n=Object.values(editArtTagValues||{}).filter(v=>v&&v.length).length;
+  tab.innerHTML='\ud83c\udff7 Attributs'+(n?` <span class="art-tab-badge">${n}</span>`:'');
+}
+
 function toggleArtTagValue(typeId,valueId){
   if(!editArtTagValues[typeId])editArtTagValues[typeId]=[];
   const idx=editArtTagValues[typeId].indexOf(valueId);
@@ -2873,7 +2971,7 @@ function syncCostFromNom(){
 let editArtNom=[];
 
 function switchArtTab(tab){
-  ['info','nom'].forEach(t=>{
+  ['info','attr','nom'].forEach(t=>{
     document.getElementById('art-panel-'+t).style.display=t===tab?'':'none';
     document.getElementById('art-tab-'+t).className='art-tab'+(t===tab?' art-tab-active':'');
   });
@@ -8305,6 +8403,22 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.6.0 &mdash; 24 ao\u00fbt 2026</h4>
+<p><strong>Nouveaut\u00e9s</strong></p>
+<ul>
+<li>Fiche article : les attributs disposent d\u00e9sormais de leur propre onglet.
+Ils s'affichent sur toute la largeur et un compteur indique combien sont renseign\u00e9s</li>
+<li>L'aper\u00e7u de la photo est nettement agrandi dans la fiche article</li>
+</ul>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Liste des articles : colonnes r\u00e9\u00e9quilibr\u00e9es \u2014 la d\u00e9signation dispose de la place
+qui lui revient, la r\u00e9f\u00e9rence est resserr\u00e9e</li>
+<li>Les listes ne d\u00e9bordent plus la largeur de l'\u00e9cran : les boutons d'action restent
+visibles sans d\u00e9filement horizontal. Sur \u00e9cran \u00e9troit, les colonnes les moins
+utiles s'effacent progressivement</li>
+</ul>
 
 <h4>1.5.1 &mdash; 24 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>

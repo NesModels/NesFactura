@@ -1,33 +1,41 @@
-FACTURA 1.5.1 — 24 août 2026
+FACTURA 1.6.0 — 24 août 2026
 ════════════════════════════════════════════════════
 
 CONTENU
   index.html   Application complète
-  sw.js        Service Worker (inchangé depuis 1.5.0)
+  sw.js        Service Worker (inchangé)
 
 DÉPLOIEMENT
   1. Copier ces fichiers à la racine du dossier
      synchronisé par GitHub Desktop
-  2. GitHub Desktop → Summary : "Factura 1.5.1"
+  2. GitHub Desktop → Summary : "Factura 1.6.0"
   3. Commit to main → Push origin
 
   Ne pas toucher aux dossiers icons/ et screenshots/,
   déjà en place sur le dépôt.
 
-  Le cache se renouvelle automatiquement : l'application
-  s'enregistre avec ./sw.js?v=1.5.1 et le Service Worker
-  en dérive le nom de son cache. Rien à modifier.
+  Le cache se renouvelle seul : l'application s'enregistre
+  avec ./sw.js?v=1.6.0 et le Service Worker en dérive le
+  nom de son cache.
 
 CHANGEMENTS
+  Nouveautés
+   • Fiche article : les attributs disposent désormais de
+     leur propre onglet. Ils s'affichent sur toute la
+     largeur et un compteur indique combien sont
+     renseignés.
+   • L'aperçu de la photo est nettement agrandi dans la
+     fiche article.
+
   Corrections
-   • Les photos des fiches articles n'étaient plus
-     affichées après redémarrage. Elles sont à nouveau
-     restaurées correctement — aucune image n'avait
-     été perdue.
-   • Fiche article : les champs sont répartis sur deux
-     colonnes, la fenêtre ne nécessite plus de
-     défilement vertical.
+   • Liste des articles : colonnes rééquilibrées — la
+     désignation dispose de la place qui lui revient, la
+     référence est resserrée.
+   • Les listes ne débordent plus la largeur de l'écran :
+     les boutons d'action restent visibles sans défilement
+     horizontal. Sur écran étroit, les colonnes les moins
+     utiles s'effacent progressivement.
 
 VÉRIFICATION APRÈS DÉPLOIEMENT
-  Menu → bas de page : "Factura v1.5.1"
+  Menu → bas de page : "Factura v1.6.0"
   Documentation → Version & historique

@@ -21,7 +21,7 @@
    Signature: barre latérale de navigation gauche
    avec icônes monochromes et accent doré
 ═══════════════════════════════════════════ */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@600&display=swap');
+/* Polices système — aucune dépendance réseau (fonctionnement hors ligne garanti) */
 
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -50,8 +50,8 @@
   --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
   --shadow-lg:0 8px 32px rgba(0,0,0,.12),0 2px 8px rgba(0,0,0,.06);
   --nav-w:220px;
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-  --font-display:'Playfair Display',Georgia,serif;
+  --font:'Inter','Segoe UI Variable','Segoe UI',-apple-system,BlinkMacSystemFont,Roboto,'Helvetica Neue',Arial,sans-serif;
+  --font-display:'Playfair Display',Georgia,'Times New Roman',serif;
 }
 
 body{font-family:var(--font);font-size:13px;color:var(--ink);background:var(--ivory2);min-height:100vh;display:flex;}
@@ -170,7 +170,425 @@ tbody tr:hover td{background:var(--ivory2);}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
 .form-row .form-group{flex:1;min-width:120px;}
-@media(max-width:760px){.g2,.g3{grid-template-columns:1fr;}#main{margin-left:0;}}
+/* Le tableau de saisie garde sa largeur confortable sur desktop */
+@media(min-width:901px){ .lines-tbl{min-width:900px;} }
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE — éléments masqués par défaut (desktop first)
+   ═══════════════════════════════════════════════════════ */
+#mobile-topbar,#mobile-tabs,#nav-scrim{display:none;}
+
+@media(max-width:900px){
+
+  /* ── Barre supérieure ── */
+  #mobile-topbar{
+    display:flex;align-items:center;gap:8px;
+    position:fixed;top:0;left:0;right:0;height:54px;z-index:400;
+    background:var(--ink);color:#fff;padding:0 6px;
+    box-shadow:0 1px 8px rgba(0,0,0,.2);
+    padding-top:env(safe-area-inset-top);
+    height:calc(54px + env(safe-area-inset-top));
+  }
+  #mobile-topbar button{
+    background:none;border:none;color:#fff;cursor:pointer;
+    width:44px;height:44px;display:flex;align-items:center;justify-content:center;
+    border-radius:var(--r8);flex-shrink:0;
+  }
+  #mobile-topbar button:active{background:rgba(255,255,255,.12);}
+  #mb-title{
+    flex:1;font-family:var(--font-display);font-size:16px;font-weight:600;
+    text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+
+  /* ── Tiroir de navigation ── */
+  #nav{
+    transform:translateX(-100%);
+    transition:transform .26s cubic-bezier(.4,0,.2,1);
+    z-index:600;width:280px;
+    padding-top:env(safe-area-inset-top);
+    overflow-y:auto;-webkit-overflow-scrolling:touch;
+  }
+  /* Toutes les rubriques restent dépliées : rien ne doit être hors d'atteinte */
+  #nav .nav-group{max-height:none!important;opacity:1!important;overflow:visible!important;}
+  #nav .ns-arrow{display:none;}
+  #nav .nav-section{cursor:default;}
+  body.nav-open #nav{transform:translateX(0);}
+  #nav-scrim{
+    display:block;position:fixed;inset:0;z-index:550;
+    background:rgba(0,0,0,.45);opacity:0;pointer-events:none;
+    transition:opacity .26s;
+  }
+  body.nav-open #nav-scrim{opacity:1;pointer-events:auto;}
+  .nav-item{padding:13px 20px;font-size:14px;}
+
+  /* ── Zone principale ── */
+  #main{
+    margin-left:0;
+    padding-top:calc(54px + env(safe-area-inset-top));
+    padding-bottom:calc(62px + env(safe-area-inset-bottom));
+  }
+  .content{padding:14px 12px;}
+  .page-header{
+    padding:14px 12px;flex-direction:column;align-items:flex-start;gap:10px;
+  }
+  .page-title{font-size:19px;}
+  /* En-tête : les actions ne se chevauchent jamais.
+     Les boutons secondaires sont masqués (.desktop-only) ; ceux
+     qui restent s'étirent sans jamais passer sous la largeur lisible. */
+  .page-actions{
+    width:100%;display:flex;gap:8px;flex-wrap:wrap;
+  }
+  .page-actions .btn,.page-actions label.btn{
+    flex:1 1 auto;min-width:132px;justify-content:center;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  }
+
+  /* ── Onglets du bas ── */
+  #mobile-tabs{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:400;
+    background:var(--ivory);border-top:1px solid var(--ivory3);
+    padding-bottom:env(safe-area-inset-bottom);
+    box-shadow:0 -1px 10px rgba(0,0,0,.06);
+  }
+  .mt-item{
+    flex:1;background:none;border:none;cursor:pointer;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;padding:8px 2px 6px;color:var(--ink4);
+    font-family:var(--font);transition:color .15s;
+  }
+  .mt-item.active{color:var(--gold);}
+  .mt-ico{font-size:19px;line-height:1;}
+  .mt-lbl{font-size:10px;font-weight:600;letter-spacing:.01em;}
+
+  /* ── Grilles et cartes ── */
+  .g2,.g3{grid-template-columns:1fr;}
+  .card,.chart-card{padding:16px 14px;border-radius:var(--r12);margin-bottom:14px;}
+  .kpi{padding:13px 14px;}
+  .kpi-value{font-size:17px;}
+
+  /* ── Formulaires : confort tactile, pas de zoom iOS ── */
+  .form-row{flex-direction:column;align-items:stretch;gap:10px;}
+  .form-group{width:100%!important;}
+  input,select,textarea{font-size:16px!important;min-height:44px;}
+  .btn{min-height:42px;padding:10px 16px;}
+  .btn-sm{min-height:36px;}
+
+  /* ── Modales plein écran ── */
+  .overlay{padding:0;align-items:flex-end;}
+  .modal{
+    width:100%;max-width:none;max-height:94vh;
+    border-radius:var(--r16) var(--r16) 0 0;padding:20px 16px;
+  }
+  .modal-art-fixed{min-height:auto;}
+
+  /* ── Tableaux : défilement horizontal maîtrisé ── */
+  .tbl-wrap,.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;}
+
+  /* ── Graphiques ── */
+  .chart-svg-wrap{overflow-x:auto;}
+  .legend{flex-wrap:wrap;gap:6px;}
+}
+
+
+/* ═══════════════════════════════════════════════════════
+   SAISIE MOBILE — cartes de lignes, barre d'action,
+   sélecteur d'article. Sans effet au-dessus de 900px.
+   ═══════════════════════════════════════════════════════ */
+#mobile-actionbar{display:none;}
+.ap-overlay{display:none;}
+
+@media(max-width:900px){
+
+
+
+  /* ── Listes en cartes : plus aucun tableau à faire défiler ── */
+  #panel-ventes thead,#panel-achats thead,#panel-articles thead{display:none;}
+  #panel-ventes table,#panel-achats table,#panel-articles table,
+  #panel-ventes tbody,#panel-achats tbody,#panel-articles tbody,
+  #panel-ventes tbody tr,#panel-achats tbody tr,#panel-articles tbody tr,
+  #panel-ventes tbody td,#panel-achats tbody td,#panel-articles tbody td{
+    display:block;width:100%;min-width:0!important;
+    border:none;padding:0;
+  }
+
+  .mcard{
+    background:var(--ivory);border:1px solid var(--ivory3);
+    border-radius:var(--r12);padding:12px 13px;margin-bottom:9px;
+    box-shadow:var(--shadow-xs);
+  }
+  .mcard-locked{background:var(--ivory2);border-style:dashed;}
+
+  .mcard-top{display:flex;align-items:center;gap:7px;margin-bottom:8px;}
+  .mcard-num{
+    font-family:monospace;font-size:12px;color:var(--ink3);
+    flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .mcard-status{flex-shrink:0;font-size:10px;}
+
+  .mcard-main{
+    display:flex;align-items:center;gap:10px;margin-bottom:7px;
+  }
+  .mcard-tier{
+    flex:1;min-width:0;font-weight:600;font-size:14.5px;color:var(--ink);
+    display:flex;align-items:center;gap:8px;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .mcard-tier em{color:var(--ink4);font-weight:400;}
+  .mcard-img{
+    width:34px;height:34px;flex-shrink:0;object-fit:cover;
+    border-radius:var(--r4);border:1px solid var(--ivory3);
+  }
+  .mcard-amt{
+    flex-shrink:0;font-weight:800;font-size:15px;
+    color:var(--ink);white-space:nowrap;
+  }
+
+  .mcard-meta{
+    display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+    font-size:11.5px;color:var(--ink4);margin-bottom:9px;
+  }
+  .mcard-ref{font-family:monospace;}
+  .mcard-lock{color:var(--amber);font-weight:600;}
+
+  .mcard-acts{
+    display:flex;gap:6px;flex-wrap:wrap;
+    padding-top:9px;border-top:1px solid var(--ivory2);
+  }
+  .mcard-acts .btn{
+    flex:1;min-width:0;min-height:36px;justify-content:center;
+    font-size:11.5px;padding:7px 6px;
+  }
+
+  .mlist-empty{
+    display:block;text-align:center;padding:30px 12px;
+    color:var(--ink4);font-size:13px;
+  }
+
+  /* Clients / Fournisseurs : peu de colonnes, on masque les moins utiles */
+  #panel-clients th:nth-child(2),#panel-clients td:nth-child(2),
+  #panel-clients th:nth-child(3),#panel-clients td:nth-child(3),
+  #panel-fournisseurs th:nth-child(2),#panel-fournisseurs td:nth-child(2),
+  #panel-fournisseurs th:nth-child(3),#panel-fournisseurs td:nth-child(3){display:none;}
+  #panel-clients table,#panel-fournisseurs table{
+    min-width:0!important;width:100%!important;table-layout:fixed;
+  }
+  #panel-clients td,#panel-fournisseurs td{
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    padding:11px 6px;font-size:12.5px;
+  }
+
+  /* ── Verrou anti-débordement horizontal ──
+     Rien ne doit dépasser la largeur de l'écran, y compris
+     les styles inline hérités du rendu desktop. ── */
+  html,body{max-width:100%;overflow-x:hidden;}
+  #main,.content,.panel{max-width:100%;overflow-x:hidden;}
+  .card,.chart-card{max-width:100%;overflow-x:hidden;}
+
+  /* Le tableau de saisie est rendu en cartes : plus aucune largeur imposée */
+  .lines-tbl{min-width:0!important;width:100%!important;table-layout:auto!important;}
+  .lines-tbl td{max-width:100%;overflow-wrap:anywhere;}
+  #panel-nouvelle-vente [style*="overflow-x"],
+  #panel-nouvel-achat  [style*="overflow-x"]{overflow-x:visible!important;}
+
+  /* Les champs ne poussent jamais leur conteneur */
+  input,select,textarea{max-width:100%;}
+  .form-group{min-width:0;}
+
+  /* Les longues valeurs se coupent au lieu d'élargir */
+  .ml-name,.ml-pick-txt,.fold-sum{min-width:0;}
+
+  /* Tableaux légitimement larges (budget, bilan) : le défilement
+     horizontal reste utile, mais confiné à leur propre conteneur —
+     il n'élargit jamais la page. */
+  #sb-table,#budget-wrap,.tbl-wrap,.table-wrap{
+    max-width:100%;overflow-x:auto!important;-webkit-overflow-scrolling:touch;
+  }
+  #budget-table,#sb-table table{max-width:none;}
+
+  /* ── Le tableau devient une pile de cartes ── */
+  .lines-tbl thead{display:none;}
+  .lines-tbl,.lines-tbl tbody,.lines-tbl tr,.lines-tbl td{
+    display:block;width:100%;border:none;padding:0;
+  }
+  .ml-empty{
+    display:block;text-align:center;padding:26px 12px;
+    color:var(--ink4);font-size:13px;
+  }
+  .ml-card{
+    background:var(--ivory);border:1px solid var(--ivory3);
+    border-radius:var(--r12);padding:12px;margin-bottom:10px;
+    box-shadow:var(--shadow-xs);
+  }
+  .ml-head{display:flex;gap:8px;align-items:center;margin-bottom:8px;}
+  .ml-name{
+    flex:1;font-weight:600;font-size:15px!important;
+    border:none;background:transparent;padding:4px 0;
+    border-bottom:1px solid var(--ivory3);border-radius:0;
+  }
+  .ml-name:focus{border-bottom-color:var(--gold);outline:none;}
+  .ml-del{
+    width:34px;height:34px;flex-shrink:0;border:none;border-radius:var(--r8);
+    background:#FEE2E2;color:#DC2626;font-size:15px;cursor:pointer;
+  }
+  .ml-del:disabled{opacity:.35;}
+
+  .ml-pick{
+    width:100%;display:flex;align-items:center;gap:8px;
+    padding:9px 10px;margin-bottom:10px;cursor:pointer;text-align:left;
+    background:var(--ivory2);border:1px solid var(--ivory3);
+    border-radius:var(--r8);font-family:var(--font);
+    font-size:12.5px;color:var(--ink2);
+  }
+  .ml-pick-ico{flex-shrink:0;}
+  .ml-pick-txt{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .ml-pick em{color:var(--ink4);}
+
+  .ml-calc{display:flex;align-items:flex-end;gap:6px;}
+  .ml-calc label{
+    flex:1;font-size:10px;font-weight:600;color:var(--ink4);
+    text-transform:uppercase;letter-spacing:.05em;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .ml-calc input{
+    width:100%;text-align:right;padding:7px 8px;
+    border:1px solid var(--ivory4);border-radius:var(--r4);
+    background:var(--ivory);
+  }
+  .ml-x,.ml-eq{color:var(--ink4);font-size:13px;padding-bottom:9px;flex-shrink:0;}
+  .ml-total{
+    min-width:88px;text-align:right;font-weight:800;font-size:15px;
+    color:var(--ink);padding-bottom:7px;
+  }
+
+  .ml-more{
+    width:100%;margin-top:8px;padding:6px;cursor:pointer;
+    background:none;border:none;border-top:1px dashed var(--ivory3);
+    color:var(--ink4);font-size:11px;font-family:var(--font);
+  }
+  .ml-detail{display:none;margin-top:8px;gap:8px;flex-direction:column;}
+  .ml-card.open .ml-detail{display:flex;}
+  .ml-f{
+    display:flex;flex-direction:column;gap:3px;
+    font-size:10px;font-weight:600;color:var(--ink4);
+    text-transform:uppercase;letter-spacing:.05em;
+  }
+  .ml-f input{
+    padding:8px;border:1px solid var(--ivory4);
+    border-radius:var(--r4);background:var(--ivory);
+  }
+
+  /* ── Barre d'action : remplace les onglets pendant la saisie ── */
+  body.editing-doc #mobile-tabs{display:none;}
+  body.editing-doc #mobile-actionbar{
+    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:410;
+    align-items:center;gap:8px;padding:9px 12px;
+    background:var(--ivory);border-top:1px solid var(--ivory3);
+    padding-bottom:calc(9px + env(safe-area-inset-bottom));
+    box-shadow:0 -2px 14px rgba(0,0,0,.1);
+  }
+  .mab-tot{display:flex;flex-direction:column;flex:1;min-width:0;}
+  .mab-lbl{
+    font-size:9px;font-weight:700;color:var(--ink4);
+    text-transform:uppercase;letter-spacing:.08em;
+  }
+  .mab-val{font-size:17px;font-weight:800;color:var(--ink);white-space:nowrap;}
+  .mab-btn{
+    padding:10px 14px;border-radius:var(--r8);font-weight:600;
+    font-size:13px;cursor:pointer;font-family:var(--font);
+    min-height:42px;flex-shrink:0;
+  }
+  .mab-ghost{background:var(--ivory2);border:1px solid var(--ivory4);color:var(--ink2);}
+  .mab-save{background:var(--ink);border:none;color:#fff;}
+  .mab-save:active{opacity:.85;}
+
+
+
+  /* ── Détail d'un document : blocs empilés (côte à côte sur desktop) ── */
+  .inv-head-grid{
+    grid-template-columns:1fr!important;
+    gap:10px!important;
+    margin-bottom:12px!important;
+  }
+  /* La grille interne des métadonnées reste sur 2 colonnes : les champs
+     sont courts (type, n°, dates, TVA) et lisibles en demi-largeur. */
+  .inv-head-grid .card > div[style*="grid-template-columns:1fr 1fr"]{
+    gap:8px!important;
+  }
+
+  /* ── Blocs Client / Document repliables ── */
+  .fold .card-title{
+    cursor:pointer;display:flex;align-items:center;gap:8px;
+    margin-bottom:12px;user-select:none;
+  }
+  .fold-sum{
+    flex:1;text-align:right;font-size:12px;font-weight:500;
+    color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .fold-arr{
+    flex-shrink:0;color:var(--ink4);font-size:12px;transition:transform .2s;
+  }
+  .fold.folded .fold-arr{transform:rotate(-90deg);}
+  .fold.folded > *:not(.card-title){display:none!important;}
+  .fold.folded .card-title{margin-bottom:0;}
+  .fold.folded{padding:12px 14px;}
+
+  /* ── Sélecteur d'article ── */
+  .ap-overlay{
+    display:none;position:fixed;inset:0;z-index:700;
+    background:rgba(28,28,30,.5);backdrop-filter:blur(3px);
+    align-items:flex-end;
+  }
+  .ap-overlay.open{display:flex;}
+  .ap-sheet{
+    width:100%;max-height:86vh;display:flex;flex-direction:column;
+    background:var(--ivory);border-radius:var(--r16) var(--r16) 0 0;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .ap-head{
+    display:flex;gap:8px;padding:14px;
+    border-bottom:1px solid var(--ivory3);flex-shrink:0;
+  }
+  #ap-q{
+    flex:1;padding:11px 13px;border:1px solid var(--ivory4);
+    border-radius:var(--r8);background:var(--ivory2);
+  }
+  .ap-close{
+    width:42px;border:none;background:var(--ivory2);
+    border-radius:var(--r8);font-size:16px;color:var(--ink3);cursor:pointer;
+  }
+  .ap-list{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:6px 0;}
+  .ap-item{
+    width:100%;display:flex;flex-direction:column;gap:2px;
+    padding:12px 16px;background:none;border:none;text-align:left;
+    cursor:pointer;font-family:var(--font);
+    border-bottom:1px solid var(--ivory2);
+  }
+  .ap-item:active{background:var(--ivory2);}
+  .ap-nm{font-size:14px;font-weight:500;color:var(--ink);}
+  .ap-meta{font-size:11px;color:var(--ink4);}
+  .ap-free{background:var(--ivory2);}
+  .ap-none{padding:26px 16px;text-align:center;color:var(--ink4);font-size:13px;}
+}
+
+@media(max-width:560px){
+  .kpis,.kpi-row{grid-template-columns:1fr 1fr!important;}
+  /* Écrans très étroits : les métadonnées du document s'empilent aussi */
+  .inv-head-grid .card > div[style*="grid-template-columns:1fr 1fr"]{
+    grid-template-columns:1fr!important;
+  }
+  .mt-lbl{font-size:8.5px;letter-spacing:-.01em;}
+  .mt-ico{font-size:17px;}
+  .mt-item{padding:7px 1px 5px;}
+  .content{padding:12px 10px;}
+}
+
+/* Écrans étroits : masquer ce qui n'a pas de sens tactile */
+@media(max-width:900px){
+  .desktop-only{display:none!important;}
+}
+@media(min-width:901px){
+  .mobile-only{display:none!important;}
+}
 
 /* ── MODAL ── */
 .overlay{position:fixed;inset:0;background:rgba(28,28,30,.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
@@ -293,6 +711,30 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 <body>
 
 <!-- ═══ NAVIGATION ═══ -->
+<!-- ═══ BARRE SUPÉRIEURE MOBILE ═══ -->
+<header id="mobile-topbar">
+  <button id="mb-menu" onclick="toggleMobileNav()" aria-label="Menu">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+  </button>
+  <div id="mb-title">Factura</div>
+  <button id="mb-add" onclick="mobileQuickAdd()" aria-label="Nouveau">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+  </button>
+</header>
+<div id="nav-scrim" onclick="closeMobileNav()"></div>
+
+<!-- ═══ SÉLECTEUR D'ARTICLE (mobile) ═══ -->
+<div id="art-picker" class="ap-overlay" onclick="if(event.target===this)closeArtPicker()">
+  <div class="ap-sheet">
+    <div class="ap-head">
+      <input id="ap-q" type="search" placeholder="Rechercher un article…"
+             oninput="renderArtPicker(this.value)" autocomplete="off">
+      <button class="ap-close" onclick="closeArtPicker()" aria-label="Fermer">✕</button>
+    </div>
+    <div id="ap-list" class="ap-list"></div>
+  </div>
+</div>
+
 <nav id="nav">
   <div class="nav-brand">
     <img id="nav-logo" class="nav-brand-logo" alt="logo">
@@ -358,6 +800,38 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   </div>
 </nav>
 
+<!-- ═══ BARRE D'ACTION DE SAISIE (mobile) ═══ -->
+<div id="mobile-actionbar">
+  <div class="mab-tot">
+    <span class="mab-lbl">Total TTC</span>
+    <span class="mab-val" id="mab-total">—</span>
+  </div>
+  <button class="mab-btn mab-ghost" onclick="mabPreview()">Aperçu</button>
+  <button class="mab-btn mab-save"  onclick="mabSave()">Enregistrer</button>
+</div>
+
+<!-- ═══ BARRE D'ONGLETS MOBILE ═══ -->
+<nav id="mobile-tabs">
+  <button class="mt-item" data-panel="ventes" onclick="go('ventes')">
+    <span class="mt-ico">🧾</span><span class="mt-lbl">Ventes</span>
+  </button>
+  <button class="mt-item" data-panel="achats" onclick="go('achats')">
+    <span class="mt-ico">📥</span><span class="mt-lbl">Achats</span>
+  </button>
+  <button class="mt-item" data-panel="articles" onclick="go('articles')">
+    <span class="mt-ico">📦</span><span class="mt-lbl">Articles</span>
+  </button>
+  <button class="mt-item" data-panel="stats" onclick="go('stats')">
+    <span class="mt-ico">📈</span><span class="mt-lbl">Stats</span>
+  </button>
+  <button class="mt-item" data-panel="budget" onclick="go('budget')">
+    <span class="mt-ico">🗂</span><span class="mt-lbl">Structure</span>
+  </button>
+  <button class="mt-item" onclick="toggleMobileNav()">
+    <span class="mt-ico">☰</span><span class="mt-lbl">Plus</span>
+  </button>
+</nav>
+
 <!-- ═══ MAIN ═══ -->
 <div id="main">
 
@@ -380,10 +854,10 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   <div class="page-header">
     <div><div class="page-title">Articles</div><div class="page-sub" id="art-count"></div></div>
     <div class="page-actions">
-      <button class="btn" onclick="exportArticlesCSV()">⬇ Export CSV</button>
-      <label class="btn" style="cursor:pointer">⬆ Import CSV/Excel<input type="file" id="import-articles-file" accept=".csv,.xlsx" style="display:none" onchange="importArticlesList(this)"></label>
-      <button class="btn" onclick="lockSelectedArts(true)" style="color:var(--amber)"><svg style="width:13px;height:13px;vertical-align:middle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg> Verrouiller</button>
-      <button class="btn" onclick="lockSelectedArts(false)" style="color:var(--green)"><svg style="width:13px;height:13px;vertical-align:middle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 5.5 0" stroke-dasharray="3 2"/></svg> Déverrouiller</button>
+      <button class="btn desktop-only" onclick="exportArticlesCSV()">⬇ Export CSV</button>
+      <label class="btn desktop-only" style="cursor:pointer">⬆ Import CSV/Excel<input type="file" id="import-articles-file" accept=".csv,.xlsx" style="display:none" onchange="importArticlesList(this)"></label>
+      <button class="btn desktop-only" onclick="lockSelectedArts(true)" style="color:var(--amber)"><svg style="width:13px;height:13px;vertical-align:middle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg> Verrouiller</button>
+      <button class="btn desktop-only" onclick="lockSelectedArts(false)" style="color:var(--green)"><svg style="width:13px;height:13px;vertical-align:middle" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 5.5 0" stroke-dasharray="3 2"/></svg> Déverrouiller</button>
       <button class="btn btn-primary" onclick="openArticleModal()">+ Nouvel article</button>
     </div>
   </div>
@@ -1755,12 +2229,6 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 
 <script>
 'use strict';
-// Forcer la désinscription de tout ancien Service Worker en cas de mise à jour
-if('serviceWorker' in navigator){
-  navigator.serviceWorker.getRegistrations().then(regs=>{
-    regs.forEach(r=>r.unregister());
-  });
-}
 // ════════════════════════════════════════
 // STORE — localStorage + fichier JSON
 // ════════════════════════════════════════
@@ -2049,8 +2517,108 @@ function renderArtTagBadges(art){
 // ════════════════════════════════════════
 // NAVIGATION
 // ════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  INTERFACE MOBILE
+//  L'application est complète sur mobile : chaque appareil
+//  possède sa propre base de données locale.
+// ══════════════════════════════════════════════════════════
+const MOBILE_BP = 900;
+function isMobile(){ return window.innerWidth <= MOBILE_BP; }
+
+const PANEL_TITLES = {
+  articles:'Articles', categories:'Attributs',
+  clients:'Clients', fournisseurs:'Fournisseurs',
+  ventes:'Ventes', achats:'Achats',
+  'nouvelle-vente':'Nouveau document', 'nouvel-achat':'Nouvel achat',
+  stats:'Statistiques ventes', 'stats-achat':'Statistiques achats',
+  'stats-marge':'Marge & Rentabilité', 'stats-bilan':'Bilan financier',
+  budget:'Budget & Structure', parametres:'Entreprise',
+  donnees:'Données', doc:'Documentation',
+};
+
+function toggleMobileNav(){ document.body.classList.toggle('nav-open'); }
+function closeMobileNav(){ document.body.classList.remove('nav-open'); }
+
+// Onglet actif + titre de la barre supérieure
+function syncMobileUI(panel){
+  const title = document.getElementById('mb-title');
+  if(title) title.textContent = PANEL_TITLES[panel] || (params.raison || 'Factura');
+
+  document.querySelectorAll('.mt-item').forEach(b=>{
+    const p = b.dataset.panel;
+    b.classList.toggle('active', !!p && (p===panel ||
+      (p==='ventes'  && panel==='nouvelle-vente') ||
+      (p==='achats'  && panel==='nouvel-achat')   ||
+      (p==='stats'   && panel.startsWith('stats'))));
+  });
+
+  // Le bouton « + » n'a de sens que sur les écrans où l'on crée quelque chose
+  const add = document.getElementById('mb-add');
+  if(add) add.style.visibility = MOBILE_ADD[panel] ? 'visible' : 'hidden';
+}
+
+// Action du bouton « + » selon le contexte
+const MOBILE_ADD = {
+  ventes:()=>newDoc('vente'),
+  achats:()=>newDoc('achat'),
+  articles:()=>openArticleModal(),
+  clients:()=>openTiersModal('client'),
+  fournisseurs:()=>openTiersModal('fournisseur'),
+};
+function mobileQuickAdd(){
+  const panel = document.querySelector('.panel.active');
+  if(!panel) return;
+  const key = panel.id.replace('panel-','');
+  const fn = MOBILE_ADD[key];
+  if(fn){ try{ fn(); }catch(e){ console.error('[mobileQuickAdd]',e); } }
+}
+
+// Garantie : chaque écran doit rester atteignable depuis le tiroir.
+// Vérifié au démarrage ; toute rubrique manquante est signalée en console.
+function auditNavAccess(){
+  const reachable = new Set(
+    [...document.querySelectorAll('#nav .nav-item')]
+      .map(el => (el.getAttribute('onclick')||'').match(/go\('([\w-]+)'\)/))
+      .filter(Boolean).map(m => m[1])
+  );
+  // Écrans atteints autrement que par le menu (formulaires de saisie)
+  const viaButtons = ['nouvelle-vente','nouvel-achat'];
+  const missing = [...document.querySelectorAll('.panel')]
+    .map(p => p.id.replace('panel-',''))
+    .filter(k => !reachable.has(k) && !viaButtons.includes(k));
+  if(missing.length) console.warn('[nav] écrans inaccessibles :', missing);
+  return missing;
+}
+
+// Fermer le tiroir avec le bouton retour du téléphone
+window.addEventListener('popstate', closeMobileNav);
+
+// Repasser en mode desktop proprement lors d'une rotation/redimensionnement
+let _wasMobile=isMobile();
+window.addEventListener('resize', ()=>{
+  if(!isMobile()) closeMobileNav();
+  // Franchissement du seuil : reconstruire depuis l'état, jamais depuis le DOM
+  const now=isMobile();
+  if(now!==_wasMobile){
+    _wasMobile=now;
+    const active=document.querySelector('.panel.active');
+    const key=active?active.id.replace('panel-',''):'';
+    const t=EDIT_PANELS[key];
+    if(t){ renderInvLines(t); updateInvTotals(t); }
+    // Les listes changent de rendu : les reconstruire
+    if(key==='ventes')       renderInvoices('vente');
+    if(key==='achats')       renderInvoices('achat');
+    if(key==='articles')     renderArticles();
+    syncActionBar(key);
+    document.body.classList.remove('nav-open');
+  }
+});
+
 function go(panel){
   ensureNavSectionOpen(panel);
+  closeMobileNav();
+  syncMobileUI(panel);
+  syncActionBar(panel);
   // Masquer le log d'import articles dès qu'on quitte le panel données
   if(panel!=='donnees'){
     const artLog=document.getElementById('art-import-log');
@@ -2116,6 +2684,7 @@ function renderArticles(){
   });
   document.getElementById('art-count').textContent=list.length+' article'+(list.length>1?'s':'');
   const tb=document.getElementById('art-tbody');
+  if(typeof isMobile==='function'&&isMobile()){return renderArticlesMobile(list);}
   if(!list.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty-state"><div class="es-icon">📦</div><div class="es-title">Aucun article</div><div class="es-sub">Créez votre premier article</div></div></td></tr>`;return;}
   const LOCK_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>`;
   const UNLOCK_SVG=`<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 5.5 0" stroke-dasharray="3 2"/></svg>`;
@@ -2820,6 +3389,17 @@ function findOrCreateTiers(raison,type){
 // ════════════════════════════════════════
 // INVOICE FORM
 // ════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  Les formulaires Vente et Achat coexistent dans le DOM avec
+//  les mêmes identifiants de champs. Toute lecture doit donc
+//  être limitée au conteneur du bon document, sinon on récupère
+//  le champ de l'autre formulaire.
+// ══════════════════════════════════════════════════════════
+function fEl(type,id){
+  const root=document.getElementById(type==='vente'?'fv-content':'fa-content');
+  return root?root.querySelector('#'+id):null;
+}
+
 function renderInvoiceForm(type){
   const S=INV[type];
   const isVente=type==='vente';
@@ -2854,14 +3434,14 @@ function renderInvoiceForm(type){
 
   const html=`
   ${lockBanner}
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
+  <div class="inv-head-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:16px">
     <!-- COL GAUCHE : tiers + adresse + canal de vente -->
-    <div class="card" style="margin-bottom:0">
-      <div class="card-title"><span class="ct-icon">${isVente?'👤':'🏭'}</span> ${isVente?'Client':'Fournisseur'}</div>
+    <div class="card fold" id="fold-tier" style="margin-bottom:0">
+      <div class="card-title" onclick="toggleFold('fold-tier','${type}')"><span class="ct-icon">${isVente?'👤':'🏭'}</span> ${isVente?'Client':'Fournisseur'}<span class="fold-sum" id="sum-tier"></span><span class="fold-arr">▾</span></div>
       <div class="form-group" style="margin-bottom:10px">
         <label>${isVente?'Client':'Fournisseur'} *</label>
-        <input type="text" id="f-tier" list="f-tier-list" placeholder="${isVente?'Nom du client…':'Nom du fournisseur…'}" value="${esc(S.tier||'')}" ${isLocked?'readonly':''}>
-        <datalist id="f-tier-list">${tiersOptions}</datalist>
+        <input type="text" id="f-tier" list="f-tier-list-${type}" placeholder="${isVente?'Nom du client…':'Nom du fournisseur…'}" value="${esc(S.tier||'')}" ${isLocked?'readonly':''}>
+        <datalist id="f-tier-list-${type}">${tiersOptions}</datalist>
       </div>
       <div class="form-group" style="margin-bottom:10px">
         <label>Adresse</label>
@@ -2872,7 +3452,8 @@ function renderInvoiceForm(type){
         :`<div class="form-group"><label>Réf. fournisseur</label><input type="text" id="f-platform" value="${esc(S.platform||'')}" placeholder="N° facture fournisseur…" ${isLocked?'readonly':''}></div>`}
     </div>
     <!-- COL DROITE : métadonnées -->
-    <div class="card" style="margin-bottom:0">
+    <div class="card fold" id="fold-meta" style="margin-bottom:0">
+      <div class="card-title mobile-only" onclick="toggleFold('fold-meta','${type}')"><span class="ct-icon">📄</span> Document<span class="fold-sum" id="sum-meta"></span><span class="fold-arr">▾</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
         <div class="form-group"><label>Type de document</label><select id="f-doctype" onchange="onDocTypeChange('${type}')" ${isLocked?'disabled':''}>
           ${CYCLE.map(d=>`<option value="${d}" ${d===dt?'selected':''}>${esc(DOC_TYPE_LABEL[d]||d)}</option>`).join('')}
@@ -2901,7 +3482,7 @@ function renderInvoiceForm(type){
       ${isLocked?'<span style="font-size:12px;color:var(--ink4)">Facture verrouillée — modification désactivée</span>':`<button class="btn btn-sm" onclick="addInvLine('${type}')">+ Ajouter une ligne</button>`}
     </div>
     <div style="overflow-x:auto">
-      <table class="lines-tbl" style="min-width:900px">
+      <table class="lines-tbl">
         <thead><tr>
           <th style="width:46px">Réf.</th>
           <th style="width:160px">Article</th>
@@ -2928,8 +3509,9 @@ function renderInvoiceForm(type){
   </div>`;
   document.getElementById(isVente?'fv-content':'fa-content').innerHTML=html;
   // Restaurer valeur canal de vente après rendu
-  if(isVente){const pSel=document.getElementById('f-platform');if(pSel&&S.platform)pSel.value=S.platform;}
+  if(isVente){const pSel=fEl(type,'f-platform');if(pSel&&S.platform)pSel.value=S.platform;}
   renderInvLines(type);
+  autoFoldFilled(type);
   updateInvTotals(type);
 }
 function addInvLine(type){
@@ -2940,12 +3522,301 @@ function addInvLine(type){
   if(tb){const inputs=tb.querySelectorAll('input[data-role="ref"]');if(inputs.length)inputs[inputs.length-1].focus();}
 }
 function removeInvLine(type,i){INV[type].lines.splice(i,1);renderInvLines(type);updateInvTotals(type);}
+
+// ══════════════════════════════════════════════════════════
+//  LISTES MOBILES — cartes au lieu de tableaux
+//  Trop de colonnes pour un petit écran : chaque enregistrement
+//  devient une carte lisible d'un coup d'œil.
+// ══════════════════════════════════════════════════════════
+function renderInvoicesMobile(type,list){
+  const tb=document.getElementById(type==='vente'?'vente-tbody':'achat-tbody');
+  if(!tb)return;
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="11" class="mlist-empty">Aucun document</td></tr>`;
+    return;
+  }
+  tb.innerHTML=list.map(i=>{
+    const h=invHT(i.lines),tv=h*i.tva/100,t=h+tv;
+    const locked=i.locked||false;
+    const dt=i.docType||'facture';
+    const dtIdx=CYCLE.indexOf(dt);
+    const upLabel={devis:'→ Cmd',commande:'→ Liv',livraison:'→ Fact'}[dt]||'';
+    return `<tr><td colspan="11"><div class="mcard${locked?' mcard-locked':''}">
+
+      <div class="mcard-top">
+        <span class="badge" style="${DOC_BADGE[dt]||DOC_BADGE.facture};font-size:10px;padding:2px 7px">${DOC_TYPE_LABEL[dt]||dt}</span>
+        <span class="mcard-num">${esc(i.num)}</span>
+        <span class="badge ${SCLASS[i.status]||'badge-ink'} mcard-status">${SLABEL[i.status]||i.status}</span>
+      </div>
+
+      <div class="mcard-main">
+        <div class="mcard-tier">${esc(i.tier)||'<em>Sans tiers</em>'}</div>
+        <div class="mcard-amt">${fmt(t)}</div>
+      </div>
+
+      <div class="mcard-meta">
+        <span>${i.date}</span>
+        ${i.platRef?`<span class="mcard-ref">${esc(i.platRef)}</span>`:''}
+        ${locked?'<span class="mcard-lock">🔒 Verrouillé</span>':''}
+      </div>
+
+      <div class="mcard-acts">
+        ${!locked&&dtIdx<CYCLE.length-1?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','up')" style="color:var(--green);font-weight:600">${upLabel}</button>`:''}
+        ${locked?'':`<button class="btn btn-xs" onclick="editInvoice('${i.id}','${type}')">✏️ Modifier</button>`}
+        <button class="btn btn-xs" onclick="printInvoice('${i.id}')">🖨 PDF</button>
+        <button class="btn btn-xs" onclick="toggleLockInv('${i.id}','${type}')">${locked?'🔓':'🔒'}</button>
+      </div>
+
+    </div></td></tr>`;
+  }).join('');
+}
+
+function renderArticlesMobile(list){
+  const tb=document.getElementById('art-tbody');
+  if(!tb)return;
+  if(!list.length){
+    tb.innerHTML=`<tr><td colspan="11" class="mlist-empty">Aucun article</td></tr>`;
+    return;
+  }
+  tb.innerHTML=list.map(a=>{
+    const cost=a.costMode==='nom'
+      ? (a.nomenclature||[]).reduce((s,n)=>s+n.qty*n.cost,0)
+      : (a.cost||0);
+    const marge=(a.price||0)-cost;
+    const taux=a.price>0?marge/a.price*100:null;
+    const mc=marge>=0?'var(--green)':'var(--red)';
+    const locked=a.locked||false;
+    return `<tr><td colspan="11"><div class="mcard${locked?' mcard-locked':''}">
+
+      <div class="mcard-main">
+        <div class="mcard-tier">
+          ${a.photo?`<img src="${a.photo}" class="mcard-img" alt="">`:''}
+          <span>${esc(a.name)}</span>
+        </div>
+        <div class="mcard-amt">${fmt(a.price||0)}</div>
+      </div>
+
+      <div class="mcard-meta">
+        ${a.ref?`<span class="mcard-ref">${esc(a.ref)}</span>`:''}
+        <span>Coût ${fmt(cost)}</span>
+        <span style="color:${mc};font-weight:700">
+          ${taux!==null?taux.toFixed(0)+'%':'—'}
+        </span>
+        ${locked?'<span class="mcard-lock">🔒</span>':''}
+      </div>
+
+      <div class="mcard-acts">
+        ${locked?'':`<button class="btn btn-xs" onclick="openArticleModal(${a.id})">✏️ Modifier</button>`}
+        <button class="btn btn-xs" onclick="duplicateArticle(${a.id})">⧉ Dupliquer</button>
+        <button class="btn btn-xs" onclick="toggleLockArt(${a.id})">${locked?'🔓':'🔒'}</button>
+      </div>
+
+    </div></td></tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
+//  SAISIE MOBILE — lignes en cartes
+//  Même état, mêmes handlers que le tableau desktop ;
+//  seul le rendu change sous 900px.
+// ══════════════════════════════════════════════════════════
+function renderInvLinesMobile(type){
+  const tb=document.getElementById('inv-lines-'+type);
+  if(!tb)return;
+  const lines=INV[type].lines;
+  const locked=isInvLocked(type);
+
+  if(!lines.length){
+    tb.innerHTML=`<tr><td colspan="9" class="ml-empty">
+      Aucune ligne — appuyez sur « + Ajouter une ligne »
+    </td></tr>`;
+    return;
+  }
+
+  const platSel=fEl(type,'f-platform');
+  const plat=platSel?platSel.value:'';
+
+  tb.innerHTML=lines.map((l,i)=>{
+    const art=l.aid?articles.find(a=>a.id===l.aid):null;
+    const total=lineHT(l);
+    const open=_mlOpen.has(i);
+    return `<tr class="ml-row"><td colspan="9"><div class="ml-card${open?' open':''}">
+
+      <div class="ml-head">
+        <input class="ml-name" type="text" value="${esc(l.name)}"
+               oninput="updLine('${type}',${i},'name',this.value)"
+               placeholder="Désignation" ${locked?'readonly':''}>
+        <button class="ml-del" onclick="removeInvLine('${type}',${i})"
+                aria-label="Supprimer" ${locked?'disabled':''}>✕</button>
+      </div>
+
+      <button class="ml-pick" onclick="openArtPicker('${type}',${i})" ${locked?'disabled':''}>
+        <span class="ml-pick-ico">📦</span>
+        <span class="ml-pick-txt">${art
+          ? (art.ref?art.ref+' — ':'')+esc(art.name)
+          : '<em>Ligne libre — choisir un article</em>'}</span>
+      </button>
+
+      <div class="ml-calc">
+        <label>Qté
+          <input type="number" value="${l.qty}" min="0.01" step="0.01"
+                 oninput="updLine('${type}',${i},'qty',this.value)" ${locked?'readonly':''}>
+        </label>
+        <span class="ml-x">×</span>
+        <label>Prix €
+          <input type="number" value="${l.price}" step="0.01"
+                 oninput="updLine('${type}',${i},'price',this.value)" ${locked?'readonly':''}>
+        </label>
+        <span class="ml-eq">=</span>
+        <div class="ml-total" id="lt-${type}-${i}">${fmt(total)}</div>
+      </div>
+
+      <button class="ml-more" onclick="toggleMlDetail(${i},'${type}')">
+        ${open?'▴ Moins':'▾ Réf., canal, remise'}
+      </button>
+
+      <div class="ml-detail">
+        <label class="ml-f">Réf.
+          <input type="text" value="${esc(l.ref||'')}"
+                 oninput="updLineRef('${type}',${i},this.value)"
+                 onblur="autoCreateArtFromRef('${type}',${i})" ${locked?'readonly':''}>
+        </label>
+        <label class="ml-f">${esc(plat)||'Réf. canal de vente'}
+          <input type="text" value="${esc(l.platRef||'')}"
+                 oninput="updLine('${type}',${i},'platRef',this.value)" ${locked?'readonly':''}>
+        </label>
+        <label class="ml-f">Remise %
+          <input type="number" value="${l.remise||0}" min="0" max="100" step="1"
+                 oninput="updLine('${type}',${i},'remise',this.value)" ${locked?'readonly':''}>
+        </label>
+      </div>
+
+    </div></td></tr>`;
+  }).join('');
+}
+
+
+// ── Sélecteur d'article avec recherche (mobile) ──
+let _pickCtx=null;
+function openArtPicker(type,i){
+  _pickCtx={type,i};
+  const ov=document.getElementById('art-picker');
+  if(!ov)return;
+  ov.classList.add('open');
+  const q=document.getElementById('ap-q');
+  if(q){q.value='';renderArtPicker('');setTimeout(()=>q.focus(),80);}
+}
+function closeArtPicker(){
+  const ov=document.getElementById('art-picker');
+  if(ov)ov.classList.remove('open');
+  _pickCtx=null;
+}
+function renderArtPicker(q){
+  const list=document.getElementById('ap-list');
+  if(!list)return;
+  const s=(q||'').trim().toLowerCase();
+  const res=(s
+    ? articles.filter(a=>
+        (a.name||'').toLowerCase().includes(s)||
+        (a.ref||'').toLowerCase().includes(s))
+    : articles
+  ).slice(0,60);
+
+  const free=`<button class="ap-item ap-free" onclick="chooseArt(null)">
+      <span class="ap-nm"><em>— Ligne libre —</em></span>
+    </button>`;
+
+  if(!res.length){
+    list.innerHTML=free+`<div class="ap-none">Aucun article ne correspond à « ${esc(q)} »</div>`;
+    return;
+  }
+  list.innerHTML=free+res.map(a=>`
+    <button class="ap-item" onclick="chooseArt(${a.id})">
+      <span class="ap-nm">${esc(a.name)}</span>
+      <span class="ap-meta">${a.ref?esc(a.ref)+' · ':''}${fmt(a.price||0)}</span>
+    </button>`).join('');
+}
+function chooseArt(aid){
+  if(!_pickCtx)return closeArtPicker();
+  const {type,i}=_pickCtx;
+  pickArt(type,i,aid===null?'':String(aid));
+  closeArtPicker();
+}
+
+
+// ── Barre d'action de saisie (remplace les onglets pendant l'édition) ──
+const EDIT_PANELS={'nouvelle-vente':'vente','nouvel-achat':'achat'};
+let _mabType=null;
+
+function syncActionBar(panel){
+  const t=EDIT_PANELS[panel]||null;
+  _mabType=t;
+  document.body.classList.toggle('editing-doc',!!t&&isMobile());
+  if(t)updateMabTotal(t);
+}
+function updateMabTotal(type){
+  const el=document.getElementById('mab-total');
+  if(!el)return;
+  const src=document.getElementById('inv-ttc-'+(type||_mabType));
+  el.textContent=src?src.textContent:'—';
+}
+function mabSave(){ if(_mabType)saveInvoice(_mabType); }
+function mabPreview(){ if(_mabType)printCurrentInvoice(_mabType); }
+
+
+// ── Blocs repliables du formulaire (mobile) ──
+function toggleFold(id,type){
+  if(!isMobile())return;
+  const root=type?document.getElementById(type==='vente'?'fv-content':'fa-content'):document;
+  const el=root?root.querySelector('#'+id):null;
+  if(el)el.classList.toggle('folded');
+}
+function updateFoldSummaries(type){
+  if(!isMobile())return;
+  const root=document.getElementById(type==='vente'?'fv-content':'fa-content');
+  if(!root)return;
+  const g=id=>{const e=root.querySelector('#'+id);return e?(e.value||'').trim():'';};
+  const st=root.querySelector('#sum-tier');
+  if(st)st.textContent=g('f-tier')||'';
+  const sm=root.querySelector('#sum-meta');
+  if(sm){
+    const num=g('f-num'),d=g('f-date');
+    sm.textContent=[num,d].filter(Boolean).join(' · ');
+  }
+}
+// Replier les deux blocs dès qu'ils sont renseignés
+function autoFoldFilled(type){
+  if(!isMobile())return;
+  const t=fEl(type,'f-tier');
+  if(t&&t.value.trim()){
+    const root=document.getElementById(type==='vente'?'fv-content':'fa-content');
+    const f=root?root.querySelector('#fold-tier'):null;
+    if(f)f.classList.add('folded');
+  }
+  updateFoldSummaries(type);
+}
+
+// Lignes dépliées (état d'affichage uniquement)
+const _mlOpen=new Set();
+function toggleMlDetail(i,type){
+  _mlOpen.has(i)?_mlOpen.delete(i):_mlOpen.add(i);
+  renderInvLines(type);
+}
+
+function isInvLocked(type){
+  const S=INV[type];
+  if(!S||!S.editId)return false;
+  const inv=invoices.find(x=>String(x.id)===String(S.editId));
+  return !!(inv&&inv.locked);
+}
+
 function renderInvLines(type){
+  if(typeof isMobile==='function'&&isMobile())return renderInvLinesMobile(type);
   const tb=document.getElementById('inv-lines-'+type);
   if(!tb)return;
   const lines=INV[type].lines;
   if(!lines.length){tb.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--ink4)">Aucune ligne — cliquez sur "+ Ajouter une ligne"</td></tr>`;return;}
-  const platSel=document.getElementById('f-platform');
+  const platSel=fEl(type,'f-platform');
   const currentPlat=platSel?platSel.value:'';
   tb.innerHTML=lines.map((l,i)=>`<tr>
     <td><input type="text" data-role="ref" value="${esc(l.ref||'')}" oninput="updLineRef('${type}',${i},this.value)" onblur="autoCreateArtFromRef('${type}',${i})" placeholder="Réf." style="width:44px;font-size:11px;font-family:monospace"></td>
@@ -2972,7 +3843,7 @@ function updLineRef(type,i,val){
     INV[type].lines[i].name=a.name;
     INV[type].lines[i].price=a.price;
     // Récupérer référence canal de vente si canal de vente sélectionnée
-    const platSel=document.getElementById('f-platform');
+    const platSel=fEl(type,'f-platform');
     if(platSel&&platSel.value){
       const pr=(a.platformRefs||[]).find(r=>r.platform===platSel.value);
       INV[type].lines[i].platRef=pr?pr.ref:'';
@@ -2990,7 +3861,7 @@ function autoCreateArtFromRef(type,i){
   // Auto-création silencieuse
   const newArt={id:seq.art++,ref:l.ref,name:l.name,price:l.price||0,unit:'unité',desc:'',tags:[],photo:'',platformRefs:[]};
   // Si ref canal de vente renseignée, l'attacher
-  const platSel=document.getElementById('f-platform');
+  const platSel=fEl(type,'f-platform');
   if(platSel&&platSel.value&&l.platRef){
     newArt.platformRefs.push({platform:platSel.value,ref:l.platRef});
   }
@@ -3009,7 +3880,7 @@ function pickArt(type,i,aid){
     INV[type].lines[i].price=a.price;
     INV[type].lines[i].ref=a.ref||'';
     // Référence canal de vente auto depuis le canal de vente sélectionnée en en-tête
-    const platSel=document.getElementById('f-platform');
+    const platSel=fEl(type,'f-platform');
     if(platSel&&platSel.value){
       const pr=(a.platformRefs||[]).find(r=>r.platform===platSel.value);
       INV[type].lines[i].platRef=pr?pr.ref:'';
@@ -3028,9 +3899,9 @@ function updLine(type,i,field,val){
   updateInvTotals(type);
 }
 function updateInvTotals(type){
-  const tvaEl=document.getElementById('f-tva');
+  const tvaEl=fEl(type,'f-tva');
   const tva=tvaEl?parseFloat(tvaEl.value)||0:(params.tvaDefault!=null?params.tvaDefault:20);
-  const rembEl=document.getElementById('f-remb');
+  const rembEl=fEl(type,'f-remb');
   const remb=rembEl?parseFloat(rembEl.value)||0:0;
   const lines=INV[type].lines;
   const h=invHT(lines),tv=h*tva/100,t=h+tv;
@@ -3038,6 +3909,7 @@ function updateInvTotals(type){
   const set=(id,val)=>{const el=document.getElementById(id);if(el)el.textContent=val;};
   const setDisp=(id,disp)=>{const el=document.getElementById(id);if(el)el.style.display=disp;};
   set('inv-ht-'+type,fmt(h));set('inv-tva-'+type,fmt(tv));set('inv-ttc-'+type,fmt(t));
+  set('mab-total',fmt(remb>0?net:t));
   const lbl=document.getElementById('inv-tva-lbl-'+type);
   if(lbl)lbl.textContent=`TVA (${tva}%)`;
   if(remb>0){
@@ -3056,11 +3928,11 @@ function updateInvTotals(type){
     <div class="stat"><div class="stat-label">TVA (${tva}%)</div><div class="stat-value" style="font-size:16px;font-weight:400">${fmt(tv)}</div></div>`;
 }
 function onDocTypeChange(type){
-  const sel=document.getElementById('f-doctype');
+  const sel=fEl(type,'f-doctype');
   if(!sel)return;
   const dt=sel.value;
   INV[type].docType=dt;
-  const numEl=document.getElementById('f-num');
+  const numEl=fEl(type,'f-num');
   if(numEl&&!INV[type].editId){
     numEl.value=nextNum(type,dt);
   }
@@ -3078,28 +3950,28 @@ function resetInvoice(type){
 }
 function readInvoiceForm(type){
   const S=INV[type];
-  const tierName=(document.getElementById('f-tier')||{}).value||'';
+  const tierName=(fEl(type,'f-tier')||{}).value||'';
   const tierType=type==='vente'?'client':'fournisseur';
   if(tierName)findOrCreateTiers(tierName,tierType);
   return{
     type,tier:tierName,
-    tierAddr:(document.getElementById('f-tier-addr')||{}).value||'',
-    num:(document.getElementById('f-num')||{}).value||'',
-    date:(document.getElementById('f-date')||{}).value||today(),
-    ech:(document.getElementById('f-ech')||{}).value||'',
-    tva:parseFloat((document.getElementById('f-tva')||{}).value)||0,
-    status:(document.getElementById('f-status')||{}).value||params.defaultStatus||'brouillon',
-    notes:(document.getElementById('f-notes')||{}).value||'',
-    platform:(document.getElementById('f-platform')||{}).value||'',
-    platRef:(document.getElementById('f-platref')||{}).value||'',
-    docType:(document.getElementById('f-doctype')||{}).value||'facture',
+    tierAddr:(fEl(type,'f-tier-addr')||{}).value||'',
+    num:(fEl(type,'f-num')||{}).value||'',
+    date:(fEl(type,'f-date')||{}).value||today(),
+    ech:(fEl(type,'f-ech')||{}).value||'',
+    tva:parseFloat((fEl(type,'f-tva')||{}).value)||0,
+    status:(fEl(type,'f-status')||{}).value||params.defaultStatus||'brouillon',
+    notes:(fEl(type,'f-notes')||{}).value||'',
+    platform:(fEl(type,'f-platform')||{}).value||'',
+    platRef:(fEl(type,'f-platref')||{}).value||'',
+    docType:(fEl(type,'f-doctype')||{}).value||'facture',
     pieces:INV[type].pieces||[],
-    remb:parseFloat((document.getElementById('f-remb')||{}).value)||0,
+    remb:parseFloat((fEl(type,'f-remb')||{}).value)||0,
     lines:[...S.lines],
   };
 }
 function saveInvoice(type){
-  const tier=(document.getElementById('f-tier')||{}).value||'';
+  const tier=(fEl(type,'f-tier')||{}).value||'';
   if(!tier.trim()){notify('Renseignez le '+(type==='vente'?'client':'fournisseur')+'.',false);return;}
   if(!INV[type].lines.length){notify('Ajoutez au moins une ligne.',false);return;}
   const inv=readInvoiceForm(type);
@@ -3205,6 +4077,7 @@ function renderInvoices(type){
     return true;
   });
   const tb=document.getElementById(type+'-tbody');
+  if(typeof isMobile==='function'&&isMobile()){return renderInvoicesMobile(type,list);}
   if(!list.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="es-icon">🧾</div><div class="es-title">Aucune facture</div><div class="es-sub">${fy||fm||fp?'Aucun résultat pour ces filtres':'Aucune facture enregistrée'}</div></div></td></tr>`;return;}
   renderStats(type);
   const DOC_BADGE={devis:'background:#EEF4FA;color:#2C5F8A',commande:'background:#FEF3C7;color:#92400E',livraison:'background:#EBF5EE;color:#2D6A4F',facture:'background:#F2F2EF;color:#1C1C1E'};
@@ -3534,7 +4407,7 @@ function printInvoice(id){
   const w=window.open('','_blank');w.document.write(buildPrintHTML(inv));w.document.close();w.focus();
 }
 function printCurrentInvoice(type){
-  const tier=(document.getElementById('f-tier')||{}).value||'';
+  const tier=(fEl(type,'f-tier')||{}).value||'';
   if(!tier||!INV[type].lines.length){notify('Remplissez le tiers et les lignes d\'abord.',false);return;}
   const inv=readInvoiceForm(type);
   const w=window.open('','_blank');w.document.write(buildPrintHTML(inv));w.document.close();w.focus();
@@ -5306,11 +6179,14 @@ function importPlatformCSV(input,platform){
   reader.onload=e=>{
     const text=e.target.result;
     try{
-      if(platform==='ebay')importEbay(text);
-      else importEtsy(text);
+      let res;
+      if(platform==='ebay')res=importEbay(text);
+      else res=importEtsy(text);
       persist();
-      renderInvoices('vente');
-      go('ventes');
+      // Si le fichier était en fait un relevé de frais, afficher les achats
+      const side=(res&&res.redirected==='achat')?'achat':'vente';
+      renderInvoices(side);
+      go(side==='achat'?'achats':'ventes');
       const el=document.getElementById('art-import-log');
       if(el)el.style.display='block';
     }catch(err){
@@ -5534,6 +6410,16 @@ function importEbay(text){
 // ══ IMPORT ETSY ══
 function importEtsy(text){
   const rows=parseCSV(text,',');
+  // Détection : s'agit-il en réalité d'un relevé mensuel (etsy_statement) ?
+  // Le relevé a les colonnes Type/Titre/Net ; les commandes vendues ont "Order ID".
+  const cols0=rows.length?Object.keys(rows[0]):[];
+  const looksLikeStatement=cols0.includes('Type')&&cols0.includes('Titre')&&!cols0.includes('Order ID');
+  if(looksLikeStatement){
+    logImport('Ce fichier est un relevé mensuel Etsy, pas un export de commandes vendues.');
+    logImport('→ Redirection automatique vers l\'import des frais Etsy…');
+    importEtsyStatementText(text);
+    return {redirected:'achat'};
+  }
   logImport(`Etsy : ${rows.length} lignes lues.`);
   // Grouper par Order ID
   const byOrder={};
@@ -5650,8 +6536,16 @@ function importEtsyStatementText(text){
   const cleaned=text.replace(/^\uFEFF/,'');
   const rows=parseCSV(cleaned,',');
   if(!rows.length){logImport('Relevé Etsy vide ou non reconnu.','err');return;}
-  if(!Object.keys(rows[0]).includes('Type')){
-    logImport('Format non reconnu — colonne Type introuvable.','err');return;
+  const cols=Object.keys(rows[0]);
+  if(cols.includes('Order ID')&&!cols.includes('Type')){
+    logImport('Ce fichier est un export de commandes vendues (EtsySoldOrderItems), pas un relevé mensuel.','err');
+    logImport('→ Utilisez la zone « Etsy — Commandes vendues » pour ce fichier.','err');
+    return;
+  }
+  if(!cols.includes('Type')){
+    logImport('Format non reconnu — colonne Type introuvable.','err');
+    logImport('Attendu : un fichier etsy_statement_*.csv (Finances → Relevé mensuel).','err');
+    return;
   }
   logImport(`Relevé Etsy : ${rows.length} lignes lues.`);
 
@@ -7382,14 +8276,22 @@ document.querySelectorAll('.overlay').forEach(ov=>{
   // ── 2. Service Worker Blob ─────────────────────────────────────────
   if('serviceWorker' in navigator){
     const CACHE='factura-v2';
-    const swCode=`const CACHE='${CACHE}';
-self.addEventListener('install',e=>self.skipWaiting());
-self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));self.clients.claim();});
-self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(cached=>{const net=fetch(e.request).then(r=>{if(r&&r.status===200&&r.type==='basic'){const c=r.clone();caches.open(CACHE).then(ca=>ca.put(e.request,c));}return r;}).catch(()=>cached);return cached||net;}));});`;
+    // (Service Worker déporté dans le fichier sw.js)
+    
     try{
-      const swBlob = new Blob([swCode],{type:'text/javascript'});
-      const swURL  = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swURL,{scope:'./'}).catch(()=>{});
+      // Un Service Worker ne peut PAS être enregistré depuis un blob: URL
+      // (refusé par les navigateurs). On utilise le fichier sw.js servi
+      // à côté de l'application. En l'absence de fichier (ouverture locale
+      // en file://), l'enregistrement échoue silencieusement — les données
+      // restent accessibles hors ligne via IndexedDB.
+      if(location.protocol==='http:'||location.protocol==='https:'){
+        navigator.serviceWorker.register('./sw.js',{scope:'./'})
+          .then(reg=>{
+            // Vérifier périodiquement les mises à jour de l'application
+            setInterval(()=>reg.update().catch(()=>{}), 60*60*1000);
+          })
+          .catch(()=>{ /* sw.js absent : app utilisable, cache offline inactif */ });
+      }
     }catch(e){}
   }
 
@@ -7519,6 +8421,13 @@ function applyNavSection(key, collapsed){
   const group=document.getElementById('ng-'+key);
   const arrow=document.getElementById('ns-arrow-'+key);
   if(!group)return;
+  // Sur mobile : tout reste déployé, aucune rubrique ne doit être masquée
+  if(typeof isMobile==='function'&&isMobile()){
+    group.style.maxHeight='none';
+    group.style.opacity='1';
+    if(arrow)arrow.classList.remove('collapsed');
+    return;
+  }
   if(collapsed){
     group.style.maxHeight='0px';
     group.style.opacity='0.5';
@@ -7533,6 +8442,8 @@ function applyNavSection(key, collapsed){
 // Sections toujours ouvertes (non escamotables)
 const NAV_ALWAYS_OPEN=new Set(['catalogue','activite','pilotage']);
 function toggleNavSection(key){
+  // Sur mobile, le tiroir défile : toutes les rubriques restent accessibles
+  if(typeof isMobile==='function'&&isMobile())return;
   const state=getNavState();
   // Si la section est toujours ouverte : ne rien faire
   if(NAV_ALWAYS_OPEN.has(key))return;

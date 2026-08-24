@@ -79,6 +79,12 @@ body{font-family:var(--font);font-size:13px;color:var(--ink);background:var(--iv
 .nav-item .ni{font-size:15px;width:18px;text-align:center;flex-shrink:0;}
 .nav-bottom{margin-top:auto;padding:16px 12px 0;border-top:1px solid rgba(255,255,255,.08);}
 .nav-save{font-size:11px;color:rgba(255,255,255,.35);display:flex;align-items:center;gap:6px;padding:8px;}
+.nav-version{
+  font-size:10px;color:rgba(255,255,255,.28);letter-spacing:.04em;
+  margin-top:6px;cursor:pointer;transition:color .15s;
+}
+.nav-version:hover{color:rgba(255,255,255,.55);}
+
 .save-dot{width:6px;height:6px;border-radius:50%;background:var(--green);flex-shrink:0;}
 
 /* ── MAIN CONTENT ── */
@@ -170,6 +176,34 @@ tbody tr:hover td{background:var(--ivory2);}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
 .form-row{display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:14px;}
 .form-row .form-group{flex:1;min-width:120px;}
+
+/* ── Bandeau « nouvelle version disponible » ── */
+#update-banner{
+  position:fixed;left:50%;transform:translateX(-50%);
+  bottom:20px;z-index:900;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--ink);color:#F5F5F0;
+  padding:12px 16px;border-radius:var(--r12);
+  box-shadow:0 6px 28px rgba(0,0,0,.28);
+  font-size:13px;max-width:calc(100vw - 32px);
+  animation:ub-in .3s ease;
+}
+@keyframes ub-in{from{opacity:0;transform:translate(-50%,14px);}to{opacity:1;transform:translate(-50%,0);}}
+#update-banner button{
+  border:none;border-radius:var(--r8);padding:7px 14px;
+  font-size:12.5px;font-weight:600;cursor:pointer;
+  font-family:var(--font);background:var(--gold);color:var(--ink);
+  flex-shrink:0;
+}
+#update-banner .ub-later{background:transparent;color:rgba(255,255,255,.5);padding:7px 8px;}
+@media(max-width:900px){
+  #update-banner{
+    bottom:calc(70px + env(safe-area-inset-bottom));
+    left:12px;right:12px;transform:none;max-width:none;
+  }
+  @keyframes ub-in{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
+}
+
 /* Le tableau de saisie garde sa largeur confortable sur desktop */
 @media(min-width:901px){ .lines-tbl{min-width:900px;} }
 
@@ -515,6 +549,11 @@ tbody tr:hover td{background:var(--ivory2);}
     gap:8px!important;
   }
 
+
+  /* Fiche article : une colonne sur mobile */
+  .art-info-grid{grid-template-columns:1fr!important;gap:0!important;}
+  .modal-art-fixed{max-width:none;}
+
   /* ── Blocs Client / Document repliables ── */
   .fold .card-title{
     cursor:pointer;display:flex;align-items:center;gap:8px;
@@ -594,7 +633,13 @@ tbody tr:hover td{background:var(--ivory2);}
 .overlay{position:fixed;inset:0;background:rgba(28,28,30,.5);backdrop-filter:blur(4px);z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
 .overlay.open{display:flex;}
 .modal{background:var(--ivory);border-radius:var(--r16);padding:28px;width:90%;max-width:580px;box-shadow:var(--shadow-lg);max-height:90vh;overflow-y:auto;}
-.modal-art-fixed{min-height:620px;display:flex;flex-direction:column;}
+.modal-art-fixed{display:flex;flex-direction:column;max-width:900px;}
+
+/* Fiche article : deux colonnes pour tenir sans ascenseur.
+   Gauche = identité et prix · Droite = classement et références. */
+.art-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;align-items:start;}
+.art-col{display:flex;flex-direction:column;min-width:0;}
+.art-col > *:last-child{margin-bottom:0;}
 .modal-art-fixed #art-panel-info,
 .modal-art-fixed #art-panel-nom{flex:1;}
 .modal-title{font-family:var(--font-display);font-size:18px;color:var(--ink);margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--ivory3);}
@@ -797,6 +842,9 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 
   <div class="nav-bottom">
     <div class="nav-save"><div class="save-dot" id="save-dot"></div><span id="save-label">Prêt</span></div>
+    <div class="nav-version" onclick="go('doc')" title="Voir l'historique des versions">
+      Factura <span id="nav-version-num"></span>
+    </div>
   </div>
 </nav>
 
@@ -2075,6 +2123,8 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 
     <!-- ONGLET 1 : INFORMATIONS -->
     <div id="art-panel-info">
+    <div class="art-info-grid">
+    <div class="art-col">
       <div class="form-row">
         <div class="form-group" style="max-width:140px"><label>Référence</label><input type="text" id="a-ref" placeholder="REF-001"></div>
         <div class="form-group" style="flex:2"><label>Désignation *</label><input type="text" id="a-name" placeholder="Nom de l'article"></div>
@@ -2116,6 +2166,9 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
         </div>
       </div>
 
+    </div><!-- /art-col gauche -->
+
+    <div class="art-col">
       <div class="form-group" style="margin-bottom:14px">
         <label>Attributs</label>
         <div id="a-tagvalues-wrap" style="display:flex;flex-direction:column;gap:10px;margin-top:6px"></div>
@@ -2133,6 +2186,8 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
         <div id="a-platform-refs" style="margin-top:6px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px"></div>
         <button class="btn btn-sm" onclick="addPlatformRef()">+ Ajouter une référence canal de vente</button>
       </div>
+    </div><!-- /art-col droite -->
+    </div><!-- /art-info-grid -->
     </div>
 
     <!-- ONGLET 2 : NOMENCLATURE -->
@@ -2291,13 +2346,18 @@ articles.forEach(a=>{
   if(!a.name)a.name='(sans nom)';
   if(a.price==null||isNaN(+a.price))a.price=0;
 });
-articles.forEach(a=>{
-  if(!a.photo){ // pas de photo inline (cas normal)
-    try{const p=localStorage.getItem('fa_photo_'+a.id);if(p)a.photo=p;}catch(e){}
-  }
-  // Si photo déjà présente inline (fallback quota), on la remet aussi dans la clé séparée
-  if(a.photo){try{localStorage.setItem('fa_photo_'+a.id,a.photo);}catch(e){}}
-});
+// Réassocie à chaque article la photo conservée dans sa clé dédiée.
+// À appeler après tout chargement d'articles (démarrage, import de sauvegarde).
+function restorePhotos(){
+  articles.forEach(a=>{
+    if(!a.photo){
+      try{const p=localStorage.getItem('fa_photo_'+a.id);if(p)a.photo=p;}catch(e){}
+    } else {
+      // Photo présente en ligne (ancienne sauvegarde) : la déporter dans sa clé
+      try{localStorage.setItem('fa_photo_'+a.id,a.photo);}catch(e){}
+    }
+  });
+}
 // Ancien système catégories (conservé pour import/export rétro-compat)
 let categories = ls(LS.cat,[]);
 // Nouveau système : types de tags
@@ -2340,6 +2400,17 @@ let logoData = lsRaw(LS.logo);
 let seq = ls(LS.seq,{art:10,tiers:1,invV:{},invA:{},DC:{},CC:{},LC:{},FC:{},DF:{},CF:{},LF:{},FF:{}});
 let _idCounter=0;
 function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
+// ══════════════════════════════════════════════════════════
+//  VERSION DE L'APPLICATION
+//  Incrémenter à chaque livraison. Affichée dans Documentation.
+//    MAJEUR . MINEUR . CORRECTIF
+//    majeur   : refonte ou rupture de compatibilité
+//    mineur   : nouvelle fonctionnalité
+//    correctif: correction de bug
+// ══════════════════════════════════════════════════════════
+const APP_VERSION = '1.5.1';
+const APP_DATE    = '2026-08-24';
+
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
 // ── Migrations de schéma ──
@@ -3395,6 +3466,25 @@ function findOrCreateTiers(raison,type){
 //  être limitée au conteneur du bon document, sinon on récupère
 //  le champ de l'autre formulaire.
 // ══════════════════════════════════════════════════════════
+
+// ── Nouvelle version disponible ──
+function notifyUpdateReady(){
+  if(document.getElementById('update-banner'))return;
+  const b=document.createElement('div');
+  b.id='update-banner';
+  b.innerHTML=`
+    <span>Une nouvelle version de Factura est disponible.</span>
+    <button onclick="applyUpdate()">Mettre à jour</button>
+    <button class="ub-later" onclick="this.parentElement.remove()">Plus tard</button>`;
+  document.body.appendChild(b);
+}
+function applyUpdate(){
+  navigator.serviceWorker.getRegistration().then(reg=>{
+    if(reg&&reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'});
+    else location.reload();
+  }).catch(()=>location.reload());
+}
+
 function fEl(type,id){
   const root=document.getElementById(type==='vente'?'fv-content':'fa-content');
   return root?root.querySelector('#'+id):null;
@@ -4641,6 +4731,9 @@ function importAll(input){
       tiers=data.tiers||[];
       // Migration unique centralisée
       runMigrations({articles, invoices, tiers});
+      // Les photos arrivent en clair dans la sauvegarde : les déporter
+      // dans leurs clés dédiées pour rester cohérent avec persist()
+      restorePhotos();
       categories=data.categories||[];
       tagTypes=data.tagTypes||[];
       params={...params,...(data.params||{})};
@@ -8185,6 +8278,92 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <p>La zone de danger permet de supprimer sélectivement articles, factures ou paramètres sans tout effacer. Irréversible.</p>
 <h4>Données de démonstration</h4>
 <p>Au premier lancement, Factura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
+  },,
+  {
+    icon:'\u2139', title:'Version & historique',
+    content:`
+<div style="background:var(--ivory2);border:1px solid var(--ivory3);border-radius:var(--r12);padding:18px 20px;margin-bottom:20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+  <div>
+    <div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink4)">Version installée</div>
+    <div style="font-size:26px;font-weight:800;color:var(--gold);line-height:1.2">${APP_VERSION}</div>
+    <div style="font-size:11px;color:var(--ink4)">Publiée le ${APP_DATE}</div>
+  </div>
+  <div style="flex:1;min-width:150px;border-left:1px solid var(--ivory3);padding-left:18px">
+    <div style="font-size:11px;color:var(--ink3);line-height:1.7">
+      <strong>Format des donn\u00e9es</strong> : v${DATA_VERSION}<br>
+      <strong>Stockage</strong> : local (IndexedDB)
+    </div>
+  </div>
+</div>
+
+<p style="font-size:12px;color:var(--ink3);margin-bottom:8px">
+Les mises \u00e0 jour sont automatiques. L'application v\u00e9rifie \u00e0 l'ouverture, puis
+toutes les heures, si une version plus r\u00e9cente a \u00e9t\u00e9 publi\u00e9e. Le cas \u00e9ch\u00e9ant,
+un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
+</p>
+<p style="font-size:12px;color:var(--ink3);margin-bottom:18px">
+Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
+migr\u00e9es automatiquement si le format \u00e9volue.
+</p>
+
+<h4>1.5.1 &mdash; 24 ao\u00fbt 2026</h4>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Les photos des fiches articles n'\u00e9taient plus affich\u00e9es apr\u00e8s red\u00e9marrage :
+elles sont \u00e0 nouveau restaur\u00e9es correctement (aucune image n'avait \u00e9t\u00e9 perdue)</li>
+<li>Fiche article : les champs sont r\u00e9partis sur deux colonnes, la fen\u00eatre ne
+n\u00e9cessite plus de d\u00e9filement vertical</li>
+</ul>
+
+<h4>1.5.0 &mdash; 24 ao\u00fbt 2026</h4>
+<p><strong>Mises \u00e0 jour automatiques.</strong> L'application d\u00e9tecte seule les nouvelles
+versions publi\u00e9es et vous propose de les appliquer, sans jamais interrompre une saisie
+en cours.</p>
+<ul>
+<li>V\u00e9rification \u00e0 l'ouverture puis toutes les heures</li>
+<li>Bandeau discret \u00ab Mettre \u00e0 jour \u00bb / \u00ab Plus tard \u00bb : vous choisissez le moment</li>
+<li>Le cache hors ligne se renouvelle automatiquement \u00e0 chaque version</li>
+<li>Num\u00e9ro de version affich\u00e9 dans le menu et dans cette rubrique</li>
+</ul>
+
+<h4>1.4.0 &mdash; 7 ao\u00fbt 2026</h4>
+<p><strong>Interface mobile compl\u00e8te.</strong> L'application est d\u00e9sormais utilisable
+sur t\u00e9l\u00e9phone : navigation par onglets, listes en cartes, saisie de documents adapt\u00e9e,
+recherche d'article filtrante et barre d'action fixe pendant l'\u00e9dition.</p>
+<ul>
+<li>Correction : les formulaires Vente et Achat partageaient les m\u00eames champs \u2014 le
+fournisseur pouvait h\u00e9riter du dernier client saisi</li>
+<li>Correction : fonctionnement hors ligne r\u00e9tabli (Service Worker et polices locales)</li>
+<li>Un relev\u00e9 mensuel Etsy d\u00e9pos\u00e9 dans la mauvaise zone est reconnu et redirig\u00e9</li>
+</ul>
+
+<h4>1.3.0 &mdash; juillet 2026</h4>
+<ul>
+<li>Import des frais et commissions depuis les relev\u00e9s mensuels Etsy</li>
+<li>Rentabilit\u00e9 r\u00e9elle par article : croisement des ventes et des achats</li>
+<li>Bilan financier consolid\u00e9 : activit\u00e9 factur\u00e9e et charges de structure</li>
+<li>Export PDF sur toutes les pages de statistiques</li>
+</ul>
+
+<h4>1.2.0 &mdash; juin 2026</h4>
+<ul>
+<li>Stockage migr\u00e9 vers IndexedDB : plus de limite de volume</li>
+<li>Co\u00fbt de revient au choix : saisi manuellement ou calcul\u00e9 depuis la nomenclature</li>
+<li>Budget &amp; Structure avec propagation automatique des montants</li>
+<li>Cr\u00e9ation automatique des clients et fournisseurs \u00e0 la facturation</li>
+</ul>
+
+<h4>1.1.0 &mdash; mai 2026</h4>
+<ul>
+<li>Cycle documentaire : devis \u2192 commande \u2192 bon de livraison \u2192 facture</li>
+<li>Import des rapports de transactions eBay</li>
+<li>Attributs personnalis\u00e9s et statistiques par attribut</li>
+</ul>
+
+<h4>1.0.0 &mdash; avril 2026</h4>
+<ul>
+<li>Premi\u00e8re version : catalogue, tiers, facturation et statistiques de vente</li>
+</ul>`
   },
 ];
 
@@ -8285,12 +8464,35 @@ document.querySelectorAll('.overlay').forEach(ov=>{
       // en file://), l'enregistrement échoue silencieusement — les données
       // restent accessibles hors ligne via IndexedDB.
       if(location.protocol==='http:'||location.protocol==='https:'){
-        navigator.serviceWorker.register('./sw.js',{scope:'./'})
+        // La version est passée en paramètre d'URL : le navigateur voit un
+        // fichier différent à chaque publication et réinstalle le Service
+        // Worker sans intervention. Le SW lit ce paramètre pour nommer son
+        // cache — plus rien à synchroniser manuellement.
+        navigator.serviceWorker.register('./sw.js?v='+APP_VERSION,{scope:'./'})
           .then(reg=>{
-            // Vérifier périodiquement les mises à jour de l'application
+            // Une version plus récente est prête : l'activer immédiatement
+            reg.addEventListener('updatefound',()=>{
+              const sw=reg.installing;
+              if(!sw)return;
+              sw.addEventListener('statechange',()=>{
+                if(sw.state==='installed'&&navigator.serviceWorker.controller){
+                  notifyUpdateReady();
+                }
+              });
+            });
+            // Rechercher les mises à jour à l'ouverture puis toutes les heures
+            reg.update().catch(()=>{});
             setInterval(()=>reg.update().catch(()=>{}), 60*60*1000);
           })
           .catch(()=>{ /* sw.js absent : app utilisable, cache offline inactif */ });
+
+        // Recharger une seule fois quand le nouveau SW prend la main
+        let _reloading=false;
+        navigator.serviceWorker.addEventListener('controllerchange',()=>{
+          if(_reloading)return;
+          _reloading=true;
+          location.reload();
+        });
       }
     }catch(e){}
   }
@@ -8812,6 +9014,10 @@ async function initApp(){
   runMigrations({articles, invoices, tiers});
   tiers = tiers; // déjà migré dans runMigrations
 
+  // Les photos sont stockées à part (clés fa_photo_<id>) pour alléger le JSON
+  // des articles. Il faut donc les réassocier une fois les articles chargés.
+  restorePhotos();
+
   // Si migration depuis localStorage, sauvegarder dans IDB et nettoyer
   if(idbArts===null||idbInvs===null){
     persist();
@@ -8823,6 +9029,8 @@ async function initApp(){
   }
 
   refreshPalette();updateNavBrand();checkExportReminder();updateTrialUI();initNavSections();
+  const vEl=document.getElementById('nav-version-num');
+  if(vEl)vEl.textContent='v'+APP_VERSION;
   const ld=getLicenseData();
   const ki=document.getElementById('p-license-key');
   if(ki&&ld.key)ki.value=ld.key;

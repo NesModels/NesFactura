@@ -791,20 +791,35 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 #panel-ventes td:last-child > div,#panel-achats td:last-child > div{
   flex-wrap:nowrap;justify-content:flex-end;
 }
-@media(min-width:901px) and (max-width:1240px){
+/* Montants toujours entiers */
+#panel-ventes td:nth-child(6),#panel-ventes td:nth-child(7),#panel-ventes td:nth-child(8),
+#panel-achats td:nth-child(6),#panel-achats td:nth-child(7),#panel-achats td:nth-child(8){
+  text-overflow:clip;overflow:visible;
+}
+@media(min-width:901px) and (max-width:1400px){
   #panel-ventes th:nth-child(7),#panel-ventes td:nth-child(7),
   #panel-achats th:nth-child(7),#panel-achats td:nth-child(7){display:none;}
 }
-@media(min-width:901px) and (max-width:1100px){
+@media(min-width:901px) and (max-width:1280px){
   #panel-ventes th:nth-child(4),#panel-ventes td:nth-child(4),
   #panel-achats th:nth-child(4),#panel-achats td:nth-child(4){display:none;}
 }
 
-/* Écrans intermédiaires : on sacrifie l'unité puis le coût avant de déborder */
-@media(min-width:901px) and (max-width:1180px){
+/* Les montants doivent toujours s'afficher en entier : jamais de troncature
+   sur les colonnes chiffrées, seule la désignation peut passer à la ligne. */
+#panel-articles td:nth-child(6),#panel-articles td:nth-child(7),
+#panel-articles td:nth-child(8),#panel-articles td:nth-child(9){
+  text-overflow:clip;overflow:visible;
+}
+/* En-têtes : deux lignes plutôt qu'une troncature */
+.table-card th{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;}
+
+/* Écrans intermédiaires : l'unité puis les attributs s'effacent
+   pour préserver la désignation et les boutons d'action. */
+@media(min-width:901px) and (max-width:1400px){
   #panel-articles th:nth-child(9),#panel-articles td:nth-child(9){display:none;}
 }
-@media(min-width:901px) and (max-width:1040px){
+@media(min-width:901px) and (max-width:1300px){
   #panel-articles th:nth-child(5),#panel-articles td:nth-child(5){display:none;}
 }
 
@@ -986,17 +1001,17 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="table-card">
       <table>
         <thead><tr>
-          <th style="width:36px"></th>
-          <th style="width:44px"><input type="checkbox" onchange="selectAllArts(this.checked)" title="Tout sélectionner" style="vertical-align:middle"></th>
-          <th style="width:74px">Réf.</th>
+          <th style="width:54px"></th>
+          <th style="width:46px"><input type="checkbox" onchange="selectAllArts(this.checked)" title="Tout sélectionner" style="vertical-align:middle"></th>
+          <th style="width:118px">Réf.</th>
           <th>Désignation</th>
-          <th style="width:170px">Attributs</th>
-          <th style="width:88px;text-align:right">Prix vente</th>
-          <th style="width:88px;text-align:right">Coût rev.</th>
-          <th style="width:78px;text-align:right">Marge</th>
-          <th style="width:62px">Unité</th>
-          <th style="width:32px">🔒</th>
-          <th style="width:104px"></th>
+          <th style="width:190px">Attributs</th>
+          <th style="width:96px;text-align:right">Prix vente</th>
+          <th style="width:106px;text-align:right">Coût rev.</th>
+          <th style="width:126px;text-align:right">Marge</th>
+          <th style="width:78px">Unité</th>
+          <th style="width:42px">🔒</th>
+          <th style="width:126px"></th>
         </tr></thead>
         <tbody id="art-tbody"></tbody>
       </table>
@@ -1098,18 +1113,18 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
     <div class="table-card"><table>
       <thead><tr>
-        <th style="width:32px"><input type="checkbox" id="sel-all-vente" onchange="selectAllInv('vente',this.checked)" title="Tout sélectionner"></th>
-        <th style="width:90px">Type</th>
-        <th style="width:130px;white-space:nowrap">N°</th>
-        <th style="width:86px;white-space:nowrap">Date</th>
-        <th>Client</th>
-        <th style="width:90px;white-space:nowrap;text-align:right">Total HT</th>
-        <th style="width:80px;white-space:nowrap;text-align:right">TVA</th>
-        <th style="width:90px;white-space:nowrap;text-align:right">Total TTC</th>
-        <th style="width:76px">Statut</th>
-        <th style="width:24px">🔒</th>
-        <th style="width:130px"></th>
-      </tr></thead>
+          <th style="width:46px"><input type="checkbox" id="sel-all-vente" onchange="selectAllInv('vente',this.checked)" title="Tout sélectionner"></th>
+          <th style="width:96px">Type</th>
+          <th style="width:142px;white-space:nowrap">N°</th>
+          <th style="width:92px;white-space:nowrap">Date</th>
+          <th>Client</th>
+          <th style="width:104px;white-space:nowrap;text-align:right">Total HT</th>
+          <th style="width:86px;white-space:nowrap;text-align:right">TVA</th>
+          <th style="width:112px;white-space:nowrap;text-align:right">Total TTC</th>
+          <th style="width:86px">Statut</th>
+          <th style="width:42px">🔒</th>
+          <th style="width:142px"></th>
+        </tr></thead>
       <tbody id="vente-tbody"></tbody>
     </table></div>
   </div>
@@ -1159,18 +1174,18 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
     <div class="table-card"><table>
       <thead><tr>
-        <th style="width:32px"><input type="checkbox" id="sel-all-achat" onchange="selectAllInv('achat',this.checked)" title="Tout sélectionner"></th>
-        <th style="width:90px">Type</th>
-        <th style="width:130px;white-space:nowrap">N°</th>
-        <th style="width:86px;white-space:nowrap">Date</th>
-        <th>Fournisseur</th>
-        <th style="width:90px;white-space:nowrap;text-align:right">Total HT</th>
-        <th style="width:80px;white-space:nowrap;text-align:right">TVA</th>
-        <th style="width:90px;white-space:nowrap;text-align:right">Total TTC</th>
-        <th style="width:76px">Statut</th>
-        <th style="width:24px">🔒</th>
-        <th style="width:130px"></th>
-      </tr></thead>
+          <th style="width:46px"><input type="checkbox" id="sel-all-achat" onchange="selectAllInv('achat',this.checked)" title="Tout sélectionner"></th>
+          <th style="width:96px">Type</th>
+          <th style="width:142px;white-space:nowrap">N°</th>
+          <th style="width:92px;white-space:nowrap">Date</th>
+          <th>Fournisseur</th>
+          <th style="width:104px;white-space:nowrap;text-align:right">Total HT</th>
+          <th style="width:86px;white-space:nowrap;text-align:right">TVA</th>
+          <th style="width:112px;white-space:nowrap;text-align:right">Total TTC</th>
+          <th style="width:86px">Statut</th>
+          <th style="width:42px">🔒</th>
+          <th style="width:142px"></th>
+        </tr></thead>
       <tbody id="achat-tbody"></tbody>
     </table></div>
   </div>
@@ -2487,7 +2502,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.6.1';
 const APP_DATE    = '2026-08-24';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -8403,6 +8418,21 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.6.1 &mdash; 24 ao\u00fbt 2026</h4>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Liste des articles : les montants \u00e9taient tronqu\u00e9s dans la colonne Marge
+(\u00ab 17,30\u2026 \u00bb). Les colonnes chiffr\u00e9es affichent d\u00e9sormais toujours leur valeur
+compl\u00e8te</li>
+<li>Les colonnes R\u00e9f\u00e9rence, photo et case \u00e0 cocher \u00e9taient trop \u00e9troites et
+affichaient des points de suspension : elles sont \u00e9largies</li>
+<li>Les en-t\u00eates de colonnes s'affichent sur deux lignes plut\u00f4t que d'\u00eatre coup\u00e9s
+(\u00ab UNI\u2026 \u00bb, \u00ab CO\u00dbT\u2026 \u00bb)</li>
+<li>Les boutons d'action restent visibles en toutes circonstances : la d\u00e9signation
+passe \u00e0 la ligne au lieu de repousser les colonnes hors de l'\u00e9cran</li>
+<li>M\u00eames corrections appliqu\u00e9es aux listes Ventes et Achats</li>
+</ul>
 
 <h4>1.6.0 &mdash; 24 ao\u00fbt 2026</h4>
 <p><strong>Nouveaut\u00e9s</strong></p>

@@ -1,4 +1,4 @@
-FACTURA 1.6.0 — 24 août 2026
+FACTURA 1.6.1 — 24 août 2026
 ════════════════════════════════════════════════════
 
 CONTENU
@@ -8,34 +8,33 @@ CONTENU
 DÉPLOIEMENT
   1. Copier ces fichiers à la racine du dossier
      synchronisé par GitHub Desktop
-  2. GitHub Desktop → Summary : "Factura 1.6.0"
+  2. GitHub Desktop → Summary : "Factura 1.6.1"
   3. Commit to main → Push origin
 
   Ne pas toucher aux dossiers icons/ et screenshots/,
   déjà en place sur le dépôt.
 
   Le cache se renouvelle seul : l'application s'enregistre
-  avec ./sw.js?v=1.6.0 et le Service Worker en dérive le
+  avec ./sw.js?v=1.6.1 et le Service Worker en dérive le
   nom de son cache.
 
 CHANGEMENTS
-  Nouveautés
-   • Fiche article : les attributs disposent désormais de
-     leur propre onglet. Ils s'affichent sur toute la
-     largeur et un compteur indique combien sont
-     renseignés.
-   • L'aperçu de la photo est nettement agrandi dans la
-     fiche article.
-
   Corrections
-   • Liste des articles : colonnes rééquilibrées — la
-     désignation dispose de la place qui lui revient, la
-     référence est resserrée.
-   • Les listes ne débordent plus la largeur de l'écran :
-     les boutons d'action restent visibles sans défilement
-     horizontal. Sur écran étroit, les colonnes les moins
-     utiles s'effacent progressivement.
+   • Liste des articles : les montants étaient tronqués
+     dans la colonne Marge (« 17,30… »). Les colonnes
+     chiffrées affichent désormais toujours leur valeur
+     complète.
+   • Les colonnes Référence, photo et case à cocher
+     étaient trop étroites et affichaient des points de
+     suspension : elles sont élargies.
+   • Les en-têtes de colonnes s'affichent sur deux lignes
+     plutôt que d'être coupés (« UNI… », « COÛT… »).
+   • Les boutons d'action restent visibles en toutes
+     circonstances : la désignation passe à la ligne au
+     lieu de repousser les colonnes hors de l'écran.
+   • Mêmes corrections appliquées aux listes Ventes et
+     Achats.
 
 VÉRIFICATION APRÈS DÉPLOIEMENT
-  Menu → bas de page : "Factura v1.6.0"
+  Menu → bas de page : "Factura v1.6.1"
   Documentation → Version & historique

@@ -1940,7 +1940,23 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
             </select>
           </div>
         </div>
-        <div class="form-row"><div class="form-group"><label>Mentions pied de facture</label><textarea id="p-mentions" rows="4" placeholder="Pénalités de retard, indemnité de recouvrement…"></textarea></div></div>
+        <div class="form-row"><div class="form-group">
+          <label>Mentions pied de facture</label>
+          <textarea id="p-mentions" rows="4" oninput="checkLegalMentions()"
+            placeholder="Pénalités de retard, indemnité de recouvrement…"></textarea>
+          <div id="legal-warn" style="display:none;background:#FEF3C7;border:1px solid #FCD34D;border-radius:var(--r8);padding:10px 12px;margin-top:8px;font-size:12px;line-height:1.6;color:#92400E">
+            <strong>⚠ Mentions obligatoires incomplètes</strong><br>
+            <span id="legal-warn-list"></span>
+            <button class="btn btn-xs" style="margin-top:8px" onclick="restoreLegalMentions()">
+              Rétablir les mentions légales
+            </button>
+          </div>
+          <p style="font-size:11px;color:var(--ink4);margin-top:6px;line-height:1.6">
+            L'article L441-9 du Code de commerce impose de faire figurer sur toute facture
+            entre professionnels le taux des pénalités de retard, l'indemnité forfaitaire
+            de recouvrement de 40 € et les conditions d'escompte.
+          </p>
+        </div></div>
         <hr class="sep">
         <div class="card-title"><span class="ct-icon">🎨</span> Identité visuelle</div>
         <div class="form-row" style="align-items:center">
@@ -2483,7 +2499,19 @@ let tagTypes = ls(LS.tagTypes,[
 })();
 let tiers = ls(LS.tiers,[]);
 let invoices = []; // chargé async par initApp()
-let params = ls(LS.params,{raison:'',forme:'',capital:'',adresse:'',tel:'',email:'',web:'',siren:'',siret:'',tvaNum:'',ape:'',rcs:'',iban:'',bic:'',banque:'',mentions:'En cas de retard de paiement, des pénalités de retard au taux de 3 fois le taux légal seront appliquées, ainsi qu\'une indemnité forfaitaire de recouvrement de 40 €.',prefixV:'FA-',prefixA:'AC-',tvaDefault:20,defaultStatus:'brouillon',accentColor:'#B8963E',platforms:['Ebay','Etsy']});
+// ══════════════════════════════════════════════════════════
+//  MENTIONS OBLIGATOIRES ENTRE PROFESSIONNELS
+//  Article L441-9 du Code de commerce : toute facture doit
+//  indiquer le taux des pénalités de retard, l'indemnité
+//  forfaitaire de recouvrement et les conditions d'escompte.
+// ══════════════════════════════════════════════════════════
+const MENTIONS_L441_9 =
+  "En cas de retard de paiement, des pénalités au taux de 3 fois le taux d'intérêt légal "
++ "seront appliquées, ainsi qu'une indemnité forfaitaire pour frais de recouvrement de 40 € "
++ "(art. L441-10 et D441-5 du Code de commerce). Aucun escompte n'est accordé "
++ "pour paiement anticipé.";
+
+let params = ls(LS.params,{raison:'',forme:'',capital:'',adresse:'',tel:'',email:'',web:'',siren:'',siret:'',tvaNum:'',ape:'',rcs:'',iban:'',bic:'',banque:'',mentions:MENTIONS_L441_9,prefixV:'FA-',prefixA:'AC-',tvaDefault:20,defaultStatus:'brouillon',accentColor:'#B8963E',platforms:['Ebay','Etsy']});
 // Garantie de rétro-compatibilité : si un ancien profil n'a pas ces clés (chargé via localStorage existant)
 if(!params.defaultStatus)params.defaultStatus='brouillon';
 if(!params.accentColor)params.accentColor='#B8963E';
@@ -2502,8 +2530,8 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.6.1';
-const APP_DATE    = '2026-08-24';
+const APP_VERSION = '1.7.0';
+const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
@@ -4619,6 +4647,35 @@ function printCurrentInvoice(type){
 // ════════════════════════════════════════
 // PARAMÈTRES
 // ════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+//  CONTRÔLE DES MENTIONS OBLIGATOIRES (art. L441-9)
+// ══════════════════════════════════════════════════════════
+function checkLegalMentions(){
+  const el=document.getElementById('p-mentions');
+  const box=document.getElementById('legal-warn');
+  const list=document.getElementById('legal-warn-list');
+  if(!el||!box)return;
+  const t=(el.value||'').toLowerCase();
+  const manquants=[];
+  if(!/pénalit|penalit|retard/.test(t))        manquants.push('le taux des pénalités de retard');
+  if(!/40\s*€|40\s*euros|recouvrement/.test(t)) manquants.push("l'indemnité forfaitaire de recouvrement de 40 €");
+  if(!/escompte/.test(t))                      manquants.push("les conditions d'escompte");
+  if(manquants.length){
+    list.textContent='Il manque '+manquants.join(', ')+'.';
+    box.style.display='block';
+  } else {
+    box.style.display='none';
+  }
+}
+function restoreLegalMentions(){
+  const el=document.getElementById('p-mentions');
+  if(!el)return;
+  el.value=MENTIONS_L441_9;
+  checkLegalMentions();
+  notify('Mentions légales rétablies');
+}
+
 function loadParamsForm(){
   const fields=['raison','forme','capital','adresse','tel','email','web','siren','siret','tva-num','ape','rcs','iban','bic','banque','mentions','tva-def'];
   const pkeys={raison:'raison',forme:'forme',capital:'capital',adresse:'adresse',tel:'tel',email:'email',web:'web','siren':'siren','siret':'siret','tva-num':'tvaNum','ape':'ape','rcs':'rcs','iban':'iban','bic':'bic','banque':'banque','mentions':'mentions','tva-def':'tvaDefault'};
@@ -4628,6 +4685,7 @@ function loadParamsForm(){
     const v=params[pkeys[f]];
     el.value=(v!=null&&v!=='')?v:''; // préserver 0
   });
+  checkLegalMentions();
   const statusSel=document.getElementById('p-default-status');
   if(statusSel)statusSel.value=params.defaultStatus||'brouillon';
   const colorPicker=document.getElementById('p-accent-color');
@@ -8247,6 +8305,22 @@ const DOC_SECTIONS = [
 <p>Champ libre pour noter le numéro de commande plateforme (Order ID eBay, Etsy…). Utilisé dans la recherche et pré-rempli automatiquement lors des imports.</p>
 <h4>TVA</h4>
 <p>La TVA par défaut (configurée dans Entreprise) est pré-remplie à la création de chaque facture. Elle peut être modifiée par document. Une TVA à 0% est autorisée.</p>
+<h4>Conformit\u00e9 des factures</h4>
+<p>Les factures g\u00e9n\u00e9r\u00e9es comportent l'ensemble des mentions exig\u00e9es entre professionnels :
+identit\u00e9 et coordonn\u00e9es des parties, num\u00e9ro et dates, d\u00e9tail des lignes, totaux HT, TVA et TTC,
+SIRET, RCS, num\u00e9ro de TVA intracommunautaire, ainsi que les p\u00e9nalit\u00e9s de retard,
+l'indemnit\u00e9 forfaitaire de recouvrement de 40 \u20ac et les conditions d'escompte
+(art. L441-9 du Code de commerce).</p>
+<p>Ces trois derni\u00e8res mentions sont pr\u00e9-remplies dans <strong>Entreprise \u2192 Mentions pied de facture</strong>.
+Un avertissement s'affiche si elles venaient \u00e0 manquer.</p>
+
+<h4>Facturation \u00e9lectronique</h4>
+<p>La r\u00e9forme fran\u00e7aise impose progressivement l'\u00e9change de factures au format structur\u00e9
+(Factur-X, UBL) via une plateforme agr\u00e9\u00e9e pour les \u00e9changes entre entreprises assujetties \u00e0 la TVA.</p>
+<p>Factura produit aujourd'hui des factures PDF, valables pour les ventes aux particuliers
+et pour l'archivage. Si votre activit\u00e9 rel\u00e8ve du B2B assujetti, v\u00e9rifiez le calendrier
+applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
+
 <h4>Verrouillage</h4>
 <p>Une facture verrouillée ne peut plus être modifiée. Verrouillez après règlement pour figer vos comptes.</p>`
   },
@@ -8389,6 +8463,10 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <p>Le bouton <strong>🔄 Créer les articles et tiers manquants depuis les factures</strong> parcourt toutes les factures et crée dans le catalogue les articles non référencés, ainsi que les clients et fournisseurs manquants dans la liste Tiers.</p>
 <h4>Réinitialisation sélective</h4>
 <p>La zone de danger permet de supprimer sélectivement articles, factures ou paramètres sans tout effacer. Irréversible.</p>
+<h4>Confidentialité</h4>
+<p>Aucune donnée ne quitte votre appareil. Le détail figure dans la
+<a href="https://nesmodels.fr/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
+
 <h4>Données de démonstration</h4>
 <p>Au premier lancement, Factura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
   },,
@@ -8418,6 +8496,32 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.7.0 &mdash; 25 ao\u00fbt 2026</h4>
+<p><strong>Conformit\u00e9 r\u00e9glementaire</strong></p>
+<ul>
+<li>Les factures int\u00e8grent d\u00e9sormais les conditions d'escompte, compl\u00e9tant les
+p\u00e9nalit\u00e9s de retard et l'indemnit\u00e9 de recouvrement de 40 \u20ac exig\u00e9es entre
+professionnels (art. L441-9 du Code de commerce)</li>
+<li>Un avertissement signale toute mention obligatoire manquante dans les param\u00e8tres
+d'entreprise, avec un bouton de r\u00e9tablissement</li>
+<li>Nouvelle page de politique de confidentialit\u00e9, accessible depuis l'application
+et depuis la page de vente</li>
+<li>Nouvelle page de mentions l\u00e9gales et conditions g\u00e9n\u00e9rales de vente</li>
+<li>La documentation pr\u00e9cise les mentions port\u00e9es sur les factures et fait le point
+sur la facturation \u00e9lectronique (Factur-X)</li>
+</ul>
+<p><strong>Page de vente</strong></p>
+<ul>
+<li>Chaque offre dispose de son propre bouton de paiement : le montant ne peut plus \u00eatre
+erron\u00e9</li>
+<li>Recueil expr\u00e8s de la renonciation au droit de r\u00e9tractation, horodat\u00e9e avec la commande</li>
+<li>Adresse de contact unifi\u00e9e</li>
+</ul>
+<p><strong>Outil interne</strong></p>
+<ul>
+<li>Le g\u00e9n\u00e9rateur de cl\u00e9s tient d\u00e9sormais un journal des licences \u00e9mises, exportable en CSV</li>
+</ul>
 
 <h4>1.6.1 &mdash; 24 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>

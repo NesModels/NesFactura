@@ -11,6 +11,16 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Factura">
 <title>Factura — Gestion Commerciale</title>
+
+<!-- ═══ PWA ═══
+     Le manifeste et les icônes sont servis à côté de l'application.
+     Sans ce lien, aucun outil (navigateur, PWABuilder, Store) ne peut
+     découvrir le manifeste : l'application n'est plus installable. -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#B8963E">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta name="msapplication-TileColor" content="#1C1C1E">
+<meta name="msapplication-TileImage" content="icons/icon-144.png">
 <link rel="icon" type="image/x-icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAIADyAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAALlJREFUeJxjZIACGRm5/wwkgCdPHjEyMDAwMJGjGVkPIzmakQELjDGnSgEumNL2gGgDmCixHa8B3d2dDPfu3ULBjY31xBtQWlrO8PTpU4aNGzcxKCmpMSgpqTF8/fqVeANgwN/fj+HevVsMkyZNYOjq6sGQZ8GiBwVs3LiJobCwBKc8xYGI0wXd3Z0M0tLSDNLS0gyvX79haGvrwKoOnpAGXzogFjAyMJCXmRgYIDmSCcYgRzMDAwMDAOrLQPNWCzPFAAAAAElFTkSuQmCC">
 <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAIADyAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAALlJREFUeJxjZIACGRm5/wwkgCdPHjEyMDAwMJGjGVkPIzmakQELjDGnSgEumNL2gGgDmCixHa8B3d2dDPfu3ULBjY31xBtQWlrO8PTpU4aNGzcxKCmpMSgpqTF8/fqVeANgwN/fj+HevVsMkyZNYOjq6sGQZ8GiBwVs3LiJobCwBKc8xYGI0wXd3Z0M0tLSDNLS0gyvX79haGvrwKoOnpAGXzogFjAyMJCXmRgYIDmSCcYgRzMDAwMDAOrLQPNWCzPFAAAAAElFTkSuQmCC">
 <style>
@@ -2564,7 +2574,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.7.2';
+const APP_VERSION = '1.7.3';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -8572,6 +8582,14 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.7.3 &mdash; 25 ao\u00fbt 2026</h4>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>L'application n'\u00e9tait plus reconnue comme installable : la d\u00e9claration du manifeste
+avait disparu de la page. Les ic\u00f4nes et le manifeste \u00e9taient pourtant bien pr\u00e9sents,
+mais aucun navigateur ni outil de publication ne pouvait les d\u00e9couvrir</li>
+</ul>
 
 <h4>1.7.2 &mdash; 25 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>

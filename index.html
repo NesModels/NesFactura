@@ -791,6 +791,15 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 #panel-ventes td:last-child > div,#panel-achats td:last-child > div{
   flex-wrap:nowrap;justify-content:flex-end;
 }
+
+/* Colonne Actions : les boutons gardent leur taille, jamais compressés */
+#panel-ventes td:last-child > div,#panel-achats td:last-child > div{
+  flex-wrap:nowrap;justify-content:flex-end;gap:3px;
+}
+#panel-ventes td:last-child .btn-xs,#panel-achats td:last-child .btn-xs{
+  flex:0 0 auto;min-width:26px;padding:4px 6px;
+}
+
 /* Montants toujours entiers */
 #panel-ventes td:nth-child(6),#panel-ventes td:nth-child(7),#panel-ventes td:nth-child(8),
 #panel-achats td:nth-child(6),#panel-achats td:nth-child(7),#panel-achats td:nth-child(8){
@@ -831,6 +840,31 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--ivory4);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink4);}
+
+/* Marches à suivre dans la documentation */
+.doc-steps{
+  counter-reset:s;list-style:none;margin:10px 0 14px;padding:0;
+}
+.doc-steps li{
+  counter-increment:s;position:relative;padding:5px 0 5px 34px;
+  font-size:13px;color:var(--ink2);line-height:1.6;
+}
+.doc-steps li::before{
+  content:counter(s);position:absolute;left:0;top:5px;
+  width:22px;height:22px;border-radius:50%;
+  background:var(--gold);color:var(--ink);
+  font-size:11px;font-weight:800;line-height:22px;text-align:center;
+}
+.doc-note{
+  background:var(--ivory2);border-left:3px solid var(--ink4);
+  border-radius:0 var(--r8) var(--r8) 0;
+  padding:10px 14px;font-size:12px;color:var(--ink3);line-height:1.6;
+}
+
+.dz-help{
+  font-size:10.5px;color:var(--ink4);margin-top:6px;line-height:1.5;
+  padding-top:6px;border-top:1px dashed var(--ivory4);
+}
 </style>
 </head>
 <body>
@@ -1114,8 +1148,8 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="table-card"><table>
       <thead><tr>
           <th style="width:46px"><input type="checkbox" id="sel-all-vente" onchange="selectAllInv('vente',this.checked)" title="Tout sélectionner"></th>
-          <th style="width:96px">Type</th>
-          <th style="width:142px;white-space:nowrap">N°</th>
+          <th style="width:86px;">Type</th>
+          <th style="width:132px;white-space:nowrap">N°</th>
           <th style="width:92px;white-space:nowrap">Date</th>
           <th>Client</th>
           <th style="width:104px;white-space:nowrap;text-align:right">Total HT</th>
@@ -1123,7 +1157,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <th style="width:112px;white-space:nowrap;text-align:right">Total TTC</th>
           <th style="width:86px">Statut</th>
           <th style="width:42px">🔒</th>
-          <th style="width:142px"></th>
+          <th style="width:172px;"></th>
         </tr></thead>
       <tbody id="vente-tbody"></tbody>
     </table></div>
@@ -1175,8 +1209,8 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="table-card"><table>
       <thead><tr>
           <th style="width:46px"><input type="checkbox" id="sel-all-achat" onchange="selectAllInv('achat',this.checked)" title="Tout sélectionner"></th>
-          <th style="width:96px">Type</th>
-          <th style="width:142px;white-space:nowrap">N°</th>
+          <th style="width:86px;">Type</th>
+          <th style="width:132px;white-space:nowrap">N°</th>
           <th style="width:92px;white-space:nowrap">Date</th>
           <th>Fournisseur</th>
           <th style="width:104px;white-space:nowrap;text-align:right">Total HT</th>
@@ -1184,7 +1218,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <th style="width:112px;white-space:nowrap;text-align:right">Total TTC</th>
           <th style="width:86px">Statut</th>
           <th style="width:42px">🔒</th>
-          <th style="width:142px"></th>
+          <th style="width:172px;"></th>
         </tr></thead>
       <tbody id="achat-tbody"></tbody>
     </table></div>
@@ -2052,7 +2086,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <div style="font-weight:600;font-size:12px;margin-bottom:8px">🛒 eBay — Rapport de transactions</div>
           <div class="drop-zone" style="padding:14px" onclick="document.getElementById('import-ebay').click()">
             <div class="dz-icon" style="font-size:24px;margin-bottom:6px">🛒</div>
-            <div class="dz-text">Fichier <strong>Transaction-*.csv</strong> (séparateur <code>;</code>)</div>
+            <div class="dz-text">Fichier <strong>Transaction-*.csv</strong> (séparateur <code>;</code>)</div><div class="dz-help">Paiements → Rapports → tous statuts, toutes transactions → plage de dates</div>
             <input type="file" id="import-ebay" accept=".csv" style="display:none" onchange="importPlatformCSV(this,'ebay')">
           </div>
         </div>
@@ -2060,7 +2094,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <div style="font-weight:600;font-size:12px;margin-bottom:8px">🧶 Etsy — Commandes vendues (articles)</div>
           <div class="drop-zone" style="padding:14px" onclick="document.getElementById('import-etsy').click()">
             <div class="dz-icon" style="font-size:24px;margin-bottom:6px">🧶</div>
-            <div class="dz-text">Fichier <strong>EtsySoldOrderItems*.csv</strong> (séparateur <code>,</code>)</div>
+            <div class="dz-text">Fichier <strong>EtsySoldOrderItems*.csv</strong> (séparateur <code>,</code>)</div><div class="dz-help">Options → Télécharger les données → Commandes → Commandes d'articles</div>
             <input type="file" id="import-etsy" accept=".csv" style="display:none" onchange="importPlatformCSV(this,'etsy')">
           </div>
         </div>
@@ -2068,7 +2102,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <div style="font-weight:600;font-size:12px;margin-bottom:8px">🧾 Etsy — Relevé mensuel (frais &amp; commissions)</div>
           <div class="drop-zone" style="padding:14px" onclick="document.getElementById('import-etsy-statement').click()">
             <div class="dz-icon" style="font-size:24px;margin-bottom:6px">🧾</div>
-            <div class="dz-text">Fichier <strong>etsy_statement_*.csv</strong> — relevé mensuel Etsy (séparateur <code>,</code>)</div>
+            <div class="dz-text">Fichier <strong>etsy_statement_*.csv</strong> (séparateur <code>,</code>)</div><div class="dz-help">Finances → Relevés mensuels → Générer le CSV</div>
             <input type="file" id="import-etsy-statement" accept=".csv" style="display:none" onchange="importEtsyStatement(this)">
           </div>
         </div>
@@ -2530,7 +2564,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.7.1';
+const APP_VERSION = '1.7.2';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -4322,6 +4356,10 @@ function renderInvoices(type){
     const canDown=dtIdx>0;
     const upLabel={devis:'→ Cmd',commande:'→ Liv',livraison:'→ Fact'}[dt]||'';
     const downLabel={commande:'← Devis',livraison:'← Cmd',facture:'← Liv'}[dt]||'';
+    const upTitle={devis:'Transformer en commande',commande:'Transformer en bon de livraison',
+                   livraison:'Transformer en facture'}[dt]||'Étape suivante';
+    const downTitle={commande:'Revenir au devis',livraison:'Revenir à la commande',
+                     facture:'Revenir au bon de livraison'}[dt]||'Étape précédente';
     const lockBtn=locked
       ? `<button class="btn btn-xs" onclick="toggleLockInv('${i.id}','${type}')" title="Déverrouiller" style="color:var(--amber)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 5.5 0" stroke-dasharray="3 2"/></svg></button>`
       : `<button class="btn btn-xs" onclick="toggleLockInv('${i.id}','${type}')" title="Verrouiller" style="color:var(--ink3)"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg></button>`;
@@ -4337,8 +4375,8 @@ function renderInvoices(type){
       <td><span class="badge ${SCLASS[i.status]||'badge-ink'}">${SLABEL[i.status]||i.status}</span></td>
       <td style="white-space:nowrap">${lockBtn}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:nowrap;align-items:center">
-        ${!locked&&canUp?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','up')" title="Convertir" style="color:var(--green);font-weight:600">${upLabel}</button>`:''}
-        ${!locked&&canDown?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','down')" title="Rétrograder" style="color:var(--ink4);font-weight:600">${downLabel}</button>`:''}
+        ${!locked&&canUp?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','up')" title="${upTitle}" style="color:var(--green);font-weight:700">→</button>`:''}
+        ${!locked&&canDown?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','down')" title="${downTitle}" style="color:var(--ink4);font-weight:700">←</button>`:''}
         ${locked?'':`<button class="btn btn-xs" onclick="editInvoice('${i.id}','${type}')" title="Modifier"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><path d="M11.5 2.5l2 2L5 13H3v-2L11.5 2.5z"/><path d="M10 4l2 2"/></svg></button>`}
         <button class="btn btn-xs" onclick="printInvoice('${i.id}')" title="Imprimer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="6" width="10" height="7" rx="1"/><path d="M5 6V2h6v4"/><circle cx="5" cy="9" r=".7" fill="currentColor" stroke="none"/></svg></button>
         ${locked?'':`<button class="btn btn-xs btn-danger" onclick="deleteInvoice('${i.id}','${type}')" title="Supprimer"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" xmlns="http://www.w3.org/2000/svg"><path d="M2 4h12M6 4V2h4v2M5 4l1 9h4l1-9"/></svg></button>`}
@@ -8334,7 +8372,19 @@ applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
     content:`
 <p>Factura importe les transactions depuis les exports CSV des plateformes. Accédez aux imports depuis <strong>Données</strong>.</p>
 <h4>eBay — Rapport de transactions</h4>
-<p>Exportez depuis eBay : Mon eBay → Ventes → Rapport de transactions (CSV séparateur <code>;</code>). L'import crée :</p>
+<p><strong>Où trouver le fichier</strong> — depuis la page de votre boutique eBay :</p>
+<ol class="doc-steps">
+<li>Ouvrez l'onglet <strong>Paiements</strong>, puis <strong>Rapports</strong></li>
+<li>Laissez <strong>Tous les statuts</strong> et <strong>Toutes les transactions</strong></li>
+<li>Sélectionnez la <strong>plage de dates</strong> concernée</li>
+<li>Générez le rapport, puis téléchargez-le</li>
+</ol>
+<p class="doc-note">Nous conseillons de procéder <strong>mois par mois</strong>, du premier
+au dernier jour du mois, pour garder des lots d'import lisibles et faciles à recouper avec
+vos relevés. La déduplication vous protège de toute façon des doublons si les plages
+se chevauchent.</p>
+<p>Vous obtenez un fichier <code>Transaction-*.csv</code> (séparateur <code>;</code>).
+Déposez-le dans la zone <strong>eBay — Rapport de transactions</strong>. L'import crée :</p>
 <ul>
 <li><strong>Factures de vente</strong> — une par commande, avec les articles vendus et les frais de port refacturés (article <code>PORT_EBAY</code>)</li>
 <li><strong>Factures d'achat eBay</strong> — une par commande regroupant le bordereau d'affranchissement + les commissions (transaction fee fixe/variable, frais réglementaires, frais de performance…)</li>
@@ -8342,9 +8392,30 @@ applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
 </ul>
 <p>La référence commande eBay (Order ID) est stockée sur l'en-tête de chaque facture et permet la recherche.</p>
 <h4>Etsy — Commandes vendues (EtsySoldOrderItems)</h4>
-<p>Exportez depuis Etsy : Boutique → Commandes et livraisons → Export CSV. L'import crée une facture de vente par commande avec le détail des articles et les frais de port (article <code>PORT_ETSY</code>).</p>
+<p><strong>Où trouver le fichier</strong> — depuis la page de votre boutique Etsy :</p>
+<ol class="doc-steps">
+<li>Ouvrez <strong>Options</strong></li>
+<li>Onglet <strong>Télécharger les données</strong></li>
+<li>Section <strong>Commandes</strong></li>
+<li>Choisissez le type <strong>Commandes d'articles</strong></li>
+<li>Sélectionnez le <strong>mois</strong> concerné, puis téléchargez</li>
+</ol>
+<p>Vous obtenez un fichier <code>EtsySoldOrderItems*.csv</code>. Déposez-le dans la zone
+<strong>Etsy — Commandes vendues</strong> de l'écran Données.</p>
+<p>L'import crée une facture de vente par commande, avec le détail des articles et les
+frais de port (article <code>PORT_ETSY</code>).</p>
+<p class="doc-note">Le type « Commandes » (sans « d'articles ») ne contient pas le détail
+ligne par ligne : il ne convient pas à cet import.</p>
 <h4>Etsy — Relevé mensuel (etsy_statement)</h4>
-<p>Exportez depuis Etsy : Finances → Relevé mensuel → Télécharger CSV. L'import crée :</p>
+<p><strong>Où trouver le fichier</strong> — depuis la page de votre boutique Etsy :</p>
+<ol class="doc-steps">
+<li>Ouvrez <strong>Finances</strong></li>
+<li>Rubrique <strong>Relevés mensuels</strong></li>
+<li>Choisissez le <strong>mois</strong> correspondant</li>
+<li>Cliquez sur <strong>Générer le CSV</strong>, puis téléchargez le fichier</li>
+</ol>
+<p>Vous obtenez un fichier <code>etsy_statement_ANNÉE_MOIS.csv</code>. Déposez-le dans la zone
+<strong>Etsy — Relevé mensuel</strong>. L'import crée :</p>
 <ul>
 <li><strong>Factures d'achat par commande</strong> — commissions (transaction fee, regulatory operating fee, processing fee…) rattachées à leur Order ID</li>
 <li><strong>Factures de frais généraux</strong> — frais de mise en vente et autres frais sans commande, regroupés par mois</li>
@@ -8501,6 +8572,21 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.7.2 &mdash; 25 ao\u00fbt 2026</h4>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Listes Ventes et Achats : les boutons de progression dans le cycle documentaire
+(devis \u2192 commande \u2192 livraison \u2192 facture) \u00e9taient tronqu\u00e9s et devenus inutilisables.
+Ils sont remplac\u00e9s par des fl\u00e8ches, avec une infobulle indiquant l'\u00e9tape vis\u00e9e</li>
+<li>Le verrouillage et le d\u00e9verrouillage d'un document ne produisaient plus aucun effet
+visible : la liste ne se redessinait pas</li>
+</ul>
+<p><strong>Documentation</strong></p>
+<ul>
+<li>Marche \u00e0 suivre d\u00e9taill\u00e9e pour exporter les fichiers depuis eBay et Etsy,
+rappel\u00e9e sous chaque zone de d\u00e9p\u00f4t de l'\u00e9cran Donn\u00e9es</li>
+</ul>
 
 <h4>1.7.1 &mdash; 25 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>

@@ -1,7 +1,7 @@
 {
-  "id": "factura-gestion-commerciale",
-  "name": "Factura — Gestion Commerciale",
-  "short_name": "Factura",
+  "id": "nesfactura-gestion-commerciale",
+  "name": "NesFactura — Gestion Commerciale",
+  "short_name": "NesFactura",
   "description": "Gestion de devis, commandes, bons de livraison et factures — 100% hors ligne",
   "start_url": "./index.html",
   "scope": "./",

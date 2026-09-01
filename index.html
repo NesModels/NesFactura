@@ -9,8 +9,8 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Factura">
-<title>Factura — Gestion Commerciale</title>
+<meta name="apple-mobile-web-app-title" content="NesFactura">
+<title>NesFactura — Gestion Commerciale</title>
 
 <!-- ═══ PWA ═══
      Le manifeste et les icônes sont servis à côté de l'application.
@@ -2574,7 +2574,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.7.3';
+const APP_VERSION = '1.7.5';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -6033,7 +6033,7 @@ function renderCumulativeLineChart(containerId, months, series){
     const v=maxV*g/4;
     const gy=yi(v);
     gridHTML+=`<line x1="${CHART_PAD_L}" y1="${gy}" x2="${CHART_W-CHART_PAD_R}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    const axLabel=axisFmt?axisFmt(v):fmtCompact(v);
+    const axLabel=fmtCompact(v);
     gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axLabel}</text>`;
   }
   const labelEvery=n>14?Math.ceil(n/12):1;
@@ -6101,7 +6101,7 @@ function renderStackedBarChart(containerId, months, series, formatter, axisFmt){
     const v=maxV*g/4;
     const gy=CHART_PAD_T+innerH-(v/maxV)*innerH;
     gridHTML+=`<line x1="${CHART_PAD_L}" y1="${gy}" x2="${CHART_W-CHART_PAD_R}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${fmtCompact(v)}</text>`;
+    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axisFmt?axisFmt(v):fmtCompact(v)}</text>`;
   }
   const labelEvery=months.length>14?Math.ceil(months.length/12):1;
   let xLabelsHTML='',barsHTML='';
@@ -7396,15 +7396,15 @@ function exportStatsAchatPDF(){
   const accentText=luma>135?'#1C1C1E':'#FFFFFF';
   function getSVG(id){const el=document.getElementById(id);if(!el)return '';const svg=el.querySelector('svg');if(!svg)return '<p style="color:#9A9990;font-size:12px;text-align:center;padding:20px">Aucune donnée</p>';return svg.outerHTML;}
   function getTopHTML(id){const el=document.getElementById(id);return el?el.innerHTML:'';}
-  const year=document.getElementById('sta-year')?.value||'';
-  const period=document.getElementById('sta-period')?.value||'';
+  const year=document.getElementById('sa-year')?.value||'';
+  const period=document.getElementById('sa-period')?.value||'';
   const periodLabels={year:'Année',custom:'Période personnalisée',all:'Toutes les données'};
   let filterDesc=periodLabels[period]||'';
   if(period==='year'&&year)filterDesc+=` ${year}`;
-  const platFilter=document.getElementById('sta-platform')?.value;
+  const platFilter=document.getElementById('sa-platform')?.value;
   if(platFilter)filterDesc+=` · Canal : ${platFilter}`;
   const logoHTML=logoData?`<img src="${logoData}" style="height:52px;max-width:160px;object-fit:contain;border-radius:6px" alt="logo">`:'';
-  const kpiEl=document.getElementById('stats-achat-kpi');
+  const kpiEl=document.getElementById('sa-stats-kpi');
   const kpiHTML=kpiEl?kpiEl.innerHTML:'';
   const css=pdfBaseCSS(accent,accentText);
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Stats Achats</title><style>${css}</style></head><body>
@@ -7419,12 +7419,12 @@ function exportStatsAchatPDF(){
     </div>
     <div class="kpis">${kpiHTML}</div>
     <div class="g2">
-      <div class="section"><div class="section-title">📊 Achats par mois</div><div class="chart-box">${getSVG('chart-achat-monthly')}</div></div>
-      <div class="section"><div class="section-title">📦 Articles achetés</div><div class="chart-box">${getSVG('chart-achat-articles')}</div></div>
+      <div class="section"><div class="section-title">📊 Achats par mois</div><div class="chart-box">${getSVG('sa-chart-monthly')}</div></div>
+      <div class="section"><div class="section-title">🍩 Répartition des achats</div><div class="chart-box">${getSVG('sa-donut-chart')}</div></div>
     </div>
     <div class="g2">
-      <div class="section"><div class="section-title">🏭 Top fournisseurs — Montant</div>${getTopHTML('top-fournisseurs-ca')}</div>
-      <div class="section"><div class="section-title">🏭 Top fournisseurs — Quantité</div>${getTopHTML('top-fournisseurs-qty')}</div>
+      <div class="section"><div class="section-title">🏭 Top fournisseurs — Montant</div>${getTopHTML('sa-top-fournisseurs-ca')}</div>
+      <div class="section"><div class="section-title">🏭 Top fournisseurs — Quantité</div>${getTopHTML('sa-top-fournisseurs-qty')}</div>
     </div>
     <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>Factura — Gestion Commerciale</span></div>
   </div></body></html>`;
@@ -8582,6 +8582,23 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.7.5 &mdash; 25 ao\u00fbt 2026</h4>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Statistiques de vente : la page restait enti\u00e8rement vide, aucun graphe ne
+s'affichait. Le rendu s'interrompait d\u00e8s le premier graphique</li>
+<li>Export PDF des statistiques d'achat : le document sortait pratiquement vide.
+Les filtres, indicateurs, graphes et classements y figurent d\u00e9sormais</li>
+</ul>
+
+<h4>1.7.4 &mdash; 25 ao\u00fbt 2026</h4>
+<p><strong>Publication</strong></p>
+<ul>
+<li>L'application est publi\u00e9e sous le nom <strong>NesFactura</strong> sur le Microsoft Store,
+le nom Factura n'y \u00e9tant pas disponible. L'interface, la documentation et le site
+conservent le nom Factura</li>
+</ul>
 
 <h4>1.7.3 &mdash; 25 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>

@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   Factura — Service Worker
+   NesFactura — Service Worker
 
    Le nom du cache est dérivé automatiquement de la version
    passée par l'application dans l'URL d'enregistrement
@@ -8,7 +8,7 @@
    ═══════════════════════════════════════════════════════════ */
 
 const VERSION = new URL(self.location).searchParams.get('v') || 'dev';
-const CACHE   = 'factura-' + VERSION;
+const CACHE   = 'nesfactura-' + VERSION;
 
 const PRECACHE = [
   './',
@@ -36,7 +36,7 @@ self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
-        keys.filter(k => k.startsWith('factura-') && k !== CACHE)
+        keys.filter(k => (k.startsWith('nesfactura-') || k.startsWith('factura-')) && k !== CACHE)
             .map(k => caches.delete(k))
       ))
       .then(() => self.clients.claim())

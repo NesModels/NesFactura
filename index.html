@@ -968,6 +968,14 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   .wc-check input{width:17px;height:17px;accent-color:var(--gold);flex-shrink:0;}
   .wc-btn{width:100%;justify-content:center;min-height:46px;font-size:15px;}
 }
+
+/* Commentaire sous le graphe du point mort */
+.pm-note{
+  margin-top:14px;padding:12px 16px;border-radius:var(--r8);
+  font-size:13px;line-height:1.6;
+}
+.pm-ok{background:#EBF5EE;border-left:3px solid var(--green);color:#1C4332;}
+.pm-deficit{background:#FEF3C7;border-left:3px solid var(--amber);color:#78350F;}
 </style>
 </head>
 <body>
@@ -1992,6 +2000,19 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
         <div class="chart-svg-wrap" id="sb-chart-flux"></div>
       </div>
 
+      <!-- POINT MORT : PRODUITS ET CHARGES CUMULÉS -->
+      <div class="chart-card">
+        <div class="chart-head">
+          <div>
+            <div class="chart-title">🎯 Point mort — produits et charges cumulés</div>
+            <div class="chart-sub">Le croisement des deux courbes indique le moment de l'exercice où l'activité devient rentable</div>
+          </div>
+          <div class="legend" id="sb-legend-pm"></div>
+        </div>
+        <div id="sb-chart-pm" class="chart-svg-wrap"></div>
+        <div id="sb-pm-note" class="pm-note"></div>
+      </div>
+
       <!-- GRAPHE RÉSULTAT NET -->
       <div class="chart-card">
         <div class="chart-head">
@@ -2737,7 +2758,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.9.0';
+const APP_VERSION = '1.10.0';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -5795,6 +5816,16 @@ function downloadGenericTemplate(){
 // ════════════════════════════════════════
 // Palette de couleurs pour les canal de ventes (extensible)
 // Palette dynamique dérivée de la couleur de l'entreprise
+// Éclaircit une couleur vers le blanc — sert aux séries secondaires
+// d'un même graphe (structure vs activité) pour rester dans la palette.
+function lighten(hex,ratio){
+  const h=(hex||'#B8963E').replace('#','');
+  if(h.length!==6)return hex;
+  const r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16);
+  const m=v=>Math.round(v+(255-v)*ratio).toString(16).padStart(2,'0');
+  return '#'+m(r)+m(g)+m(b);
+}
+
 function buildAccentPalette(hex){
   // Convertir hex → HSL
   const r=parseInt(hex.slice(1,3),16)/255;
@@ -7984,6 +8015,7 @@ function renderBilan(){
     <div style="${ks};border-color:${netAnnuel>=0?'#6FCF97':'#FCA5A5'}"><div class="kpi-label">⚖️ Résultat net</div><div class="kpi-value" style="color:${nc};margin-top:6px;font-size:22px">${fmt(netAnnuel)}</div></div>
     <div style="${ks}"><div class="kpi-label">📊 Marge activité</div><div class="kpi-value" style="color:${mc2};margin-top:6px">${margeAct.toFixed(1)}%</div></div>`;
   renderSbFluxChart(MONTHS,caVbyM,structRecM,caAbyM,structDepM);
+  renderSbPointMort(MONTHS,totRecM,totDepM);
   renderSbNetMonthlyChart(MONTHS,netM);
   renderSbNetCumulChart(MONTHS,cumulM);
   renderSbTopStructure('sb-top-recettes',bData.recettes,'recettes');
@@ -8007,14 +8039,125 @@ function renderSbFluxChart(months,caVbyM,structRecM,caAbyM,structDepM){
     const cx=xi(i);
     xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;
     const totR=v+structRecM[i],hCA=v/maxV*innerH,hSR=structRecM[i]/maxV*innerH;
-    bars+=`<rect x="${cx-barW-2}" y="${yi(totR)}" width="${barW}" height="${Math.max(1,hSR)}" fill="#6FCF97" opacity=".85" rx="1"><title>${months[i]} Recettes structure : ${svgEsc(fmt(structRecM[i]))}</title></rect>`;
-    bars+=`<rect x="${cx-barW-2}" y="${yi(v)}" width="${barW}" height="${Math.max(1,hCA)}" fill="#2D6A4F" opacity=".9" rx="1"><title>${months[i]} CA Ventes : ${svgEsc(fmt(v))}</title></rect>`;
+    bars+=`<rect x="${cx-barW-2}" y="${yi(totR)}" width="${barW}" height="${Math.max(1,hSR)}" fill="${lighten(STATS_COLORS.vente,.38)}" opacity=".85" rx="1"><title>${months[i]} Recettes structure : ${svgEsc(fmt(structRecM[i]))}</title></rect>`;
+    bars+=`<rect x="${cx-barW-2}" y="${yi(v)}" width="${barW}" height="${Math.max(1,hCA)}" fill="${STATS_COLORS.vente}" opacity=".9" rx="1"><title>${months[i]} CA Ventes : ${svgEsc(fmt(v))}</title></rect>`;
     const totD=caAbyM[i]+structDepM[i],hAch=caAbyM[i]/maxV*innerH,hSD=structDepM[i]/maxV*innerH;
-    bars+=`<rect x="${cx+2}" y="${yi(totD)}" width="${barW}" height="${Math.max(1,hSD)}" fill="#F6AD55" opacity=".85" rx="1"><title>${months[i]} Dépenses structure : ${svgEsc(fmt(structDepM[i]))}</title></rect>`;
-    bars+=`<rect x="${cx+2}" y="${yi(caAbyM[i])}" width="${barW}" height="${Math.max(1,hAch)}" fill="#C05621" opacity=".85" rx="1"><title>${months[i]} Achats : ${svgEsc(fmt(caAbyM[i]))}</title></rect>`;
+    bars+=`<rect x="${cx+2}" y="${yi(totD)}" width="${barW}" height="${Math.max(1,hSD)}" fill="${lighten(STATS_COLORS.achat,.38)}" opacity=".85" rx="1"><title>${months[i]} Dépenses structure : ${svgEsc(fmt(structDepM[i]))}</title></rect>`;
+    bars+=`<rect x="${cx+2}" y="${yi(caAbyM[i])}" width="${barW}" height="${Math.max(1,hAch)}" fill="${STATS_COLORS.achat}" opacity=".85" rx="1"><title>${months[i]} Achats : ${svgEsc(fmt(caAbyM[i]))}</title></rect>`;
   });
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${bars}${xlab}</svg>`;
-  if(legendEl)legendEl.innerHTML=`<div class="legend-item"><span class="legend-line" style="background:#2D6A4F"></span>CA Ventes</div><div class="legend-item"><span class="legend-line" style="background:#6FCF97"></span>Recettes structure</div><div class="legend-item"><span class="legend-line" style="background:#C05621"></span>Achats</div><div class="legend-item"><span class="legend-line" style="background:#F6AD55"></span>Dépenses structure</div>`;
+  if(legendEl)legendEl.innerHTML=`<div class="legend-item"><span class="legend-line" style="background:${STATS_COLORS.vente}"></span>CA Ventes</div><div class="legend-item"><span class="legend-line" style="background:${lighten(STATS_COLORS.vente,.38)}"></span>Recettes structure</div><div class="legend-item"><span class="legend-line" style="background:${STATS_COLORS.achat}"></span>Achats</div><div class="legend-item"><span class="legend-line" style="background:${lighten(STATS_COLORS.achat,.38)}"></span>Dépenses structure</div>`;
+}
+
+
+// ══════════════════════════════════════════════════════════
+//  POINT MORT
+//  Deux courbes cumulées sur l'exercice : produits et charges.
+//  Leur croisement marque le moment où l'activité couvre ses
+//  coûts — le seuil de rentabilité.
+// ══════════════════════════════════════════════════════════
+function renderSbPointMort(months, totRecM, totDepM){
+  syncChartMetrics();
+  const el=document.getElementById('sb-chart-pm');
+  if(!el)return;
+
+  // Cumuls progressifs
+  let cr=0, cd=0;
+  const recCum=totRecM.map(v=>cr+=v);
+  const depCum=totDepM.map(v=>cd+=v);
+
+  const maxV=Math.max(...recCum,...depCum,1);
+  const top=niceMax(maxV);
+  const innerW=CHART_W-CHART_PAD_L-CHART_PAD_R;
+  const innerH=CHART_H-CHART_PAD_T-CHART_PAD_B;
+  const xi=i=>CHART_PAD_L+(months.length>1?innerW*i/(months.length-1):innerW/2);
+  const yv=v=>CHART_PAD_T+innerH-(v/top)*innerH;
+
+  // Grille et graduations
+  let grid='';
+  for(let g=0;g<=4;g++){
+    const v=top*g/4, y=yv(v);
+    grid+=`<line x1="${CHART_PAD_L}" y1="${y}" x2="${CHART_W-CHART_PAD_R}" y2="${y}" stroke="#E8E8E3" stroke-width="1"/>`;
+    grid+=`<text x="${CHART_PAD_L-8}" y="${y+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${fmtCompact(v)}</text>`;
+  }
+
+  const pas=labelStep(months.length);
+  let xlab='';
+  months.forEach((m,i)=>{
+    if(i%pas===0||i===months.length-1)
+      xlab+=`<text x="${xi(i)}" y="${CHART_H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif" font-weight="500">${m}</text>`;
+  });
+
+  const trace=(vals)=>vals.map((v,i)=>`${i?'L':'M'}${xi(i)},${yv(v)}`).join(' ');
+  // Couleurs issues de la palette de l'entreprise : produits et charges
+  // reprennent les teintes utilisées partout pour les ventes et les achats.
+  const VERT=STATS_COLORS.vente, ROUGE=STATS_COLORS.achat;
+
+  // Zone entre les deux courbes : verte au-dessus du seuil, rouge en dessous
+  const aire=`${trace(recCum)} L${xi(months.length-1)},${yv(depCum[months.length-1])} `
+            +depCum.slice().reverse().map((v,k)=>`L${xi(months.length-1-k)},${yv(v)}`).join(' ')+' Z';
+
+  // Recherche du croisement : premier mois où les produits passent devant
+  let pmIdx=-1, pmX=null, pmY=null;
+  for(let i=0;i<months.length;i++){
+    if(recCum[i]>=depCum[i]){
+      pmIdx=i;
+      if(i===0){ pmX=xi(0); pmY=yv(recCum[0]); }
+      else{
+        // Interpolation linéaire entre les deux mois encadrant le croisement
+        const d0=recCum[i-1]-depCum[i-1], d1=recCum[i]-depCum[i];
+        const t=(d1-d0)!==0?(-d0)/(d1-d0):0;
+        pmX=xi(i-1)+(xi(i)-xi(i-1))*t;
+        const rv=recCum[i-1]+(recCum[i]-recCum[i-1])*t;
+        pmY=yv(rv);
+      }
+      break;
+    }
+  }
+
+  let repere='';
+  if(pmX!==null){
+    repere=`<line x1="${pmX}" y1="${CHART_PAD_T}" x2="${pmX}" y2="${CHART_H-CHART_PAD_B}"
+              stroke="${VERT}" stroke-width="1.5" stroke-dasharray="5 4" opacity=".7"/>
+            <circle cx="${pmX}" cy="${pmY}" r="6" fill="#fff" stroke="${VERT}" stroke-width="3"/>`;
+  }
+
+  const pts=(vals,c)=>vals.map((v,i)=>
+    `<circle cx="${xi(i)}" cy="${yv(v)}" r="3" fill="${c}"><title>${months[i]} : ${esc(fmt(v))}</title></circle>`).join('');
+
+  el.innerHTML=`<svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">
+    ${grid}
+    <path d="${aire}" fill="${pmIdx>=0?VERT:ROUGE}" opacity=".08"/>
+    <line x1="${CHART_PAD_L}" y1="${CHART_H-CHART_PAD_B}" x2="${CHART_W-CHART_PAD_R}" y2="${CHART_H-CHART_PAD_B}" stroke="#D8D8D2" stroke-width="1"/>
+    <path d="${trace(depCum)}" fill="none" stroke="${ROUGE}" stroke-width="2.4" stroke-linejoin="round"/>
+    <path d="${trace(recCum)}" fill="none" stroke="${VERT}"  stroke-width="2.4" stroke-linejoin="round"/>
+    ${repere}
+    ${pts(depCum,ROUGE)}
+    ${pts(recCum,VERT)}
+    ${xlab}
+  </svg>`;
+
+  // Légende
+  const lg=document.getElementById('sb-legend-pm');
+  if(lg)lg.innerHTML=
+    `<div class="legend-item"><span class="legend-line" style="background:${VERT}"></span>Produits cumulés</div>`
+   +`<div class="legend-item"><span class="legend-line" style="background:${ROUGE}"></span>Charges cumulées</div>`;
+
+  // Commentaire sous le graphe
+  const note=document.getElementById('sb-pm-note');
+  if(note){
+    const dernier=recCum[recCum.length-1]-depCum[depCum.length-1];
+    if(pmIdx<0){
+      note.className='pm-note pm-deficit';
+      note.innerHTML=`<strong>Point mort non atteint sur l'exercice.</strong> `
+        +`Il manque ${esc(fmt(Math.abs(dernier)))} de produits pour couvrir les charges.`;
+    } else {
+      note.className='pm-note pm-ok';
+      note.innerHTML=`<strong>Point mort atteint en ${months[pmIdx]}.</strong> `
+        +`À partir de ce moment, les produits cumulés dépassent les charges cumulées. `
+        +`Excédent en fin d'exercice : ${esc(fmt(dernier))}.`;
+    }
+  }
 }
 
 function renderSbNetMonthlyChart(months,netM){
@@ -8029,7 +8172,7 @@ function renderSbNetMonthlyChart(months,netM){
   let grid='',bars='',xlab='';
   for(let g=0;g<=4;g++){const v=minV+(maxV-minV)*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
   grid+=`<line x1="${PL}" y1="${zero}" x2="${W-PR}" y2="${zero}" stroke="#9A9990" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  netM.forEach((v,i)=>{const cx=xi(i),c=v>=0?'#2D6A4F':'#DC2626',h=Math.abs(v/range*innerH);bars+=`<rect x="${cx-barW/2}" y="${v>=0?yi(v):zero}" width="${barW}" height="${Math.max(1,h)}" fill="${c}" opacity=".85" rx="2"><title>${months[i]} : ${svgEsc(fmt(v))}</title></rect>`;xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
+  netM.forEach((v,i)=>{const cx=xi(i),c=v>=0?STATS_COLORS.vente:'#DC2626',h=Math.abs(v/range*innerH);bars+=`<rect x="${cx-barW/2}" y="${v>=0?yi(v):zero}" width="${barW}" height="${Math.max(1,h)}" fill="${c}" opacity=".85" rx="2"><title>${months[i]} : ${svgEsc(fmt(v))}</title></rect>`;xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${bars}${xlab}</svg>`;
 }
 
@@ -8047,7 +8190,7 @@ function renderSbNetCumulChart(months,cumulM){
   const ptList=cumulM.map((v,i)=>`${xi(i)},${yi(v)}`);
   path=`<polyline points="${ptList.join(' ')}" fill="none" stroke="${PLATFORM_COLORS[0]}" stroke-width="2.5" stroke-linejoin="round"/>`;
   area=`<polygon points="${ptList[0].split(',')[0]},${zero} ${ptList.join(' ')} ${ptList[11].split(',')[0]},${zero}" fill="${PLATFORM_COLORS[0]}" opacity=".1"/>`;
-  cumulM.forEach((v,i)=>{const c=v>=0?'#2D6A4F':'#DC2626';pts+=`<circle cx="${xi(i)}" cy="${yi(v)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${months[i]} cumulé : ${svgEsc(fmt(v))}</title></circle>`;xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
+  cumulM.forEach((v,i)=>{const c=v>=0?STATS_COLORS.vente:'#DC2626';pts+=`<circle cx="${xi(i)}" cy="${yi(v)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${months[i]} cumulé : ${svgEsc(fmt(v))}</title></circle>`;xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${area}${path}${pts}${xlab}</svg>`;
 }
 
@@ -8057,7 +8200,7 @@ function renderSbTopStructure(elId,rows,section){
   const items=rows.map(r=>({label:r.label||'(sans libellé)',total:Array.from({length:12},(_,i)=>getBudgetCellValue(r,i+1)).reduce((s,v)=>s+v,0)})).filter(r=>r.total>0).sort((a,b)=>b.total-a.total);
   if(!items.length){el.innerHTML='<div class="chart-empty">Aucun montant saisi</div>';return;}
   const maxT=items[0].total||1;
-  const col=section==='recettes'?'#2D6A4F':'#C05621';
+  const col=section==='recettes'?STATS_COLORS.vente:STATS_COLORS.achat;
   el.innerHTML=items.map((r,i)=>`<div class="top-row"><div class="top-rank">${i+1}</div><div class="top-name" title="${esc(r.label)}">${esc(r.label)}</div><div class="top-bar-wrap"><div class="top-bar" style="width:${Math.max(4,r.total/maxT*100)}%;background:${col}"></div></div><div class="top-value">${fmt(r.total)}</div></div>`).join('');
 }
 
@@ -8261,6 +8404,7 @@ function exportBilanPDF(){
     <div class="kpis">${kpi1?kpi1.innerHTML:''}</div>
     <div class="kpis" style="margin-top:0">${kpi2?kpi2.innerHTML:''}</div>
     <div class="section" style="margin-top:16px"><div class="section-title">📊 Flux mensuels consolidés</div><div class="chart-box">${getSVG('sb-chart-flux')}</div></div>
+    <div class="section"><div class="section-title">🎯 Point mort — produits et charges cumulés</div><div class="chart-box">${getSVG('sb-chart-pm')}</div>${(document.getElementById('sb-pm-note')||{}).innerHTML?`<div style="margin-top:8px;font-size:11px;color:#3A3A3C">${document.getElementById('sb-pm-note').innerHTML}</div>`:''}</div>
     <div class="g2">
       <div class="section"><div class="section-title">📊 Résultat net mensuel</div><div class="chart-box">${getSVG('sb-chart-net-monthly')}</div></div>
       <div class="section"><div class="section-title">📈 Résultat cumulé</div><div class="chart-box">${getSVG('sb-chart-net-cumul')}</div></div>
@@ -8943,6 +9087,14 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <p>Aucune donnée ne quitte votre appareil. Le détail figure dans la
 <a href="https://nesmodels.fr/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
 
+<h4>Mises à jour</h4>
+<p>NesFactura se met à jour toute seule : à l'ouverture, l'application vérifie si une version
+plus récente a été publiée et vous propose de l'appliquer. Cela vaut aussi bien pour la version
+installée depuis le Microsoft Store que pour l'usage direct dans le navigateur — le paquet du
+Store charge le même contenu.</p>
+<p>Une fois l'application chargée, elle fonctionne intégralement hors connexion. Le réseau ne
+sert qu'à vérifier les mises à jour.</p>
+
 <h4>Données de démonstration</h4>
 <p>Au premier lancement, NesFactura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
   },,
@@ -8972,6 +9124,30 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.10.0 &mdash; 2 septembre 2026</h4>
+<p><strong>Bilan financier</strong></p>
+<ul>
+<li>Nouveau graphique <strong>Point mort</strong> : les produits et les charges cumul\u00e9s
+sont superpos\u00e9s sur l'exercice. Leur croisement indique \u00e0 quel moment l'activit\u00e9
+devient rentable, et un commentaire annonce le mois atteint ou le montant manquant</li>
+<li>Le graphique est repris dans l'export PDF du bilan</li>
+<li>Les graphiques du bilan reprennent d\u00e9sormais les couleurs de votre entreprise
+(logo ou couleur d'accent) comme le reste de l'application</li>
+</ul>
+<p><strong>Site de vente</strong></p>
+<ul>
+<li>La pr\u00e9sentation met en avant l'import des ventes eBay et Etsy plut\u00f4t que la seule
+facturation, et explique l'origine du logiciel</li>
+<li>Les conditions de vente pr\u00e9cisent l'\u00e9tendue de la licence, l'absence d'assistance
+vendue et la possibilit\u00e9 d'\u00e9valuer le logiciel complet avant achat</li>
+<li>Les mentions l\u00e9gales distinguent d\u00e9sormais l'h\u00e9bergement du site, celui du contenu
+de l'application et la distribution par le Microsoft Store</li>
+</ul>
+<p><strong>Documentation</strong></p>
+<ul>
+<li>Nouvelle section expliquant le fonctionnement des mises \u00e0 jour automatiques</li>
+</ul>
 
 <h4>1.9.0 &mdash; 2 septembre 2026</h4>
 <p><strong>Changement de nom</strong></p>

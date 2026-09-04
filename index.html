@@ -25,7 +25,7 @@
 <link rel="shortcut icon" href="data:image/x-icon;base64,AAABAAEAEBAAAAAAIADyAAAAFgAAAIlQTkcNChoKAAAADUlIRFIAAAAQAAAAEAgGAAAAH/P/YQAAALlJREFUeJxjZIACGRm5/wwkgCdPHjEyMDAwMJGjGVkPIzmakQELjDGnSgEumNL2gGgDmCixHa8B3d2dDPfu3ULBjY31xBtQWlrO8PTpU4aNGzcxKCmpMSgpqTF8/fqVeANgwN/fj+HevVsMkyZNYOjq6sGQZ8GiBwVs3LiJobCwBKc8xYGI0wXd3Z0M0tLSDNLS0gyvX79haGvrwKoOnpAGXzogFjAyMJCXmRgYIDmSCcYgRzMDAwMDAOrLQPNWCzPFAAAAAElFTkSuQmCC">
 <style>
 /* ═══════════════════════════════════════════
-   DESIGN SYSTEM — Factura
+   DESIGN SYSTEM — NesFactura
    Palette: encre / ivoire / ardoise / or pâle
    Typo: Inter (system) + Playfair Display (headers)
    Signature: barre latérale de navigation gauche
@@ -208,7 +208,7 @@ tbody tr:hover td{background:var(--ivory2);}
 #update-banner .ub-later{background:transparent;color:rgba(255,255,255,.5);padding:7px 8px;}
 @media(max-width:900px){
   #update-banner{
-    bottom:calc(70px + env(safe-area-inset-bottom));
+    bottom:calc(20px + env(safe-area-inset-bottom));
     left:12px;right:12px;transform:none;max-width:none;
   }
   @keyframes ub-in{from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);}}
@@ -220,7 +220,7 @@ tbody tr:hover td{background:var(--ivory2);}
 /* ═══════════════════════════════════════════════════════
    MOBILE — éléments masqués par défaut (desktop first)
    ═══════════════════════════════════════════════════════ */
-#mobile-topbar,#mobile-tabs,#nav-scrim{display:none;}
+#mobile-topbar,#nav-scrim{display:none;}
 
 @media(max-width:900px){
 
@@ -269,7 +269,10 @@ tbody tr:hover td{background:var(--ivory2);}
   #main{
     margin-left:0;
     padding-top:calc(54px + env(safe-area-inset-top));
-    padding-bottom:calc(62px + env(safe-area-inset-bottom));
+    padding-bottom:calc(16px + env(safe-area-inset-bottom));
+  }
+  body.editing-doc #main{
+    padding-bottom:calc(78px + env(safe-area-inset-bottom));
   }
   .content{padding:14px 12px;}
   .page-header{
@@ -288,21 +291,6 @@ tbody tr:hover td{background:var(--ivory2);}
   }
 
   /* ── Onglets du bas ── */
-  #mobile-tabs{
-    display:flex;position:fixed;bottom:0;left:0;right:0;z-index:400;
-    background:var(--ivory);border-top:1px solid var(--ivory3);
-    padding-bottom:env(safe-area-inset-bottom);
-    box-shadow:0 -1px 10px rgba(0,0,0,.06);
-  }
-  .mt-item{
-    flex:1;background:none;border:none;cursor:pointer;
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:2px;padding:8px 2px 6px;color:var(--ink4);
-    font-family:var(--font);transition:color .15s;
-  }
-  .mt-item.active{color:var(--gold);}
-  .mt-ico{font-size:19px;line-height:1;}
-  .mt-lbl{font-size:10px;font-weight:600;letter-spacing:.01em;}
 
   /* ── Grilles et cartes ── */
   .g2,.g3{grid-template-columns:1fr;}
@@ -393,6 +381,23 @@ tbody tr:hover td{background:var(--ivory2);}
   }
   .mcard-ref{font-family:monospace;}
   .mcard-lock{color:var(--amber);font-weight:600;}
+
+
+  /* Progression dans le cycle documentaire, sur les cartes mobiles */
+  .mcard-cycle{
+    display:grid;grid-template-columns:1fr 1fr;gap:7px;
+    margin-bottom:9px;padding-bottom:9px;
+    border-bottom:1px solid var(--ivory2);
+  }
+  .mcc-btn{
+    padding:9px 8px;border-radius:var(--r8);cursor:pointer;
+    font-family:var(--font);font-size:12px;font-weight:600;
+    min-height:38px;border:1px solid var(--ivory4);
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  }
+  .mcc-back{background:var(--ivory2);color:var(--ink3);}
+  .mcc-next{background:#EBF5EE;border-color:#B7DFC6;color:var(--green);}
+  .mcc-btn:active{opacity:.7;}
 
   .mcard-acts{
     display:flex;gap:6px;flex-wrap:wrap;
@@ -522,7 +527,7 @@ tbody tr:hover td{background:var(--ivory2);}
   }
 
   /* ── Barre d'action : remplace les onglets pendant la saisie ── */
-  body.editing-doc #mobile-tabs{display:none;}
+  /* La barre n'apparaît que pendant la saisie d'un document */
   body.editing-doc #mobile-actionbar{
     display:flex;position:fixed;bottom:0;left:0;right:0;z-index:410;
     align-items:center;gap:8px;padding:9px 12px;
@@ -566,6 +571,54 @@ tbody tr:hover td{background:var(--ivory2);}
   .modal-art-fixed{max-width:none;}
   /* Trois onglets doivent tenir sans déborder */
   .art-tab{flex:1;padding:10px 4px!important;font-size:12px!important;text-align:center;}
+
+
+
+
+  /* Tableau de synthèse : seul contenu conservé sur mobile,
+     il garde son défilement horizontal mais en plus compact. */
+  #sb-table{-webkit-overflow-scrolling:touch;}
+  #sb-table table{font-size:11px;}
+  #sb-table th,#sb-table td{padding:6px 7px;white-space:nowrap;}
+  #sb-table th:first-child,#sb-table td:first-child{
+    position:sticky;left:0;background:var(--ivory);z-index:2;
+    box-shadow:1px 0 0 var(--ivory3);
+  }
+
+  /* ── Graphes accompagnés d'un encart explicatif ──
+     Sur mobile l'encart écrase le graphique : on le masque et
+     le graphe occupe toute la largeur. ── */
+  .chart-with-aside{
+    grid-template-columns:1fr!important;
+    gap:0!important;
+  }
+  /* Le premier enfant contient le graphe, le second l'encart de réglages */
+  .chart-with-aside > *:nth-child(2){display:none;}
+  .chart-with-aside > *:first-child{min-width:0;}
+
+  /* Le graphe est calibré pour la largeur de l'écran : aucun défilement
+     horizontal ne doit apparaître. */
+  .chart-svg-wrap{width:100%;overflow-x:hidden!important;}
+  .chart-svg-wrap svg{width:100%;height:auto;display:block;}
+
+  /* ── Tableaux de bord sur mobile ──
+     Un seul graphe reste affiché : les autres sont illisibles sur
+     un écran étroit et sont repris dans l'export PDF. ── */
+  #panel-stats .chart-card:not(.mobile-primary),
+  #panel-stats-achat .chart-card:not(.mobile-primary),
+  #panel-stats-marge .chart-card:not(.mobile-primary),
+  #panel-stats-bilan .chart-card:not(.mobile-primary){display:none;}
+
+  /* Les grilles à deux colonnes qui n'encadrent plus rien */
+  #panel-stats .g2:empty,#panel-stats-achat .g2:empty,
+  #panel-stats-marge .g2:empty,#panel-stats-bilan .g2:empty{display:none;}
+
+  .stats-pdf-hint{
+    background:var(--ivory2);border:1px solid var(--ivory3);
+    border-radius:var(--r12);padding:16px;margin-bottom:14px;
+  }
+  .sph-txt{font-size:12.5px;line-height:1.65;color:var(--ink3);margin-bottom:12px;}
+  .sph-btn{width:100%;justify-content:center;min-height:44px;}
 
   /* ── Blocs Client / Document repliables ── */
   .fold .card-title{
@@ -628,9 +681,6 @@ tbody tr:hover td{background:var(--ivory2);}
   .inv-head-grid .card > div[style*="grid-template-columns:1fr 1fr"]{
     grid-template-columns:1fr!important;
   }
-  .mt-lbl{font-size:8.5px;letter-spacing:-.01em;}
-  .mt-ico{font-size:17px;}
-  .mt-item{padding:7px 1px 5px;}
   .content{padding:12px 10px;}
 }
 
@@ -875,6 +925,49 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   font-size:10.5px;color:var(--ink4);margin-top:6px;line-height:1.5;
   padding-top:6px;border-top:1px dashed var(--ivory4);
 }
+
+/* ── Fenêtre de bienvenue (mobile) ── */
+.wc-overlay{display:none;}
+@media(max-width:900px){
+  .wc-overlay.open{
+    display:flex;position:fixed;inset:0;z-index:800;
+    flex-direction:column;justify-content:flex-end;
+    background:rgba(28,28,30,.62);backdrop-filter:blur(3px);
+    padding:0 14px calc(20px + env(safe-area-inset-bottom));
+  }
+  /* La flèche part de la carte et remonte vers le bouton ☰ */
+  .wc-arrow{
+    position:absolute;top:calc(52px + env(safe-area-inset-top));left:14px;
+    animation:wc-bob 1.6s ease-in-out infinite;
+  }
+  @keyframes wc-bob{
+    0%,100%{transform:translateY(0);}
+    50%{transform:translateY(7px);}
+  }
+  .wc-card{
+    background:var(--ivory);border-radius:var(--r16);
+    padding:22px 20px;box-shadow:0 8px 40px rgba(0,0,0,.3);
+    animation:wc-in .32s cubic-bezier(.2,.8,.3,1);
+  }
+  @keyframes wc-in{from{opacity:0;transform:translateY(24px);}to{opacity:1;transform:none;}}
+  .wc-title{
+    font-family:var(--font-display);font-size:20px;font-weight:600;
+    color:var(--ink);margin-bottom:10px;
+  }
+  .wc-lead{font-size:13.5px;line-height:1.65;color:var(--ink2);margin-bottom:14px;}
+  .wc-menu{
+    font-size:13px;line-height:1.65;color:var(--ink2);
+    background:var(--ivory2);border-left:3px solid var(--gold);
+    border-radius:0 var(--r8) var(--r8) 0;padding:11px 13px;margin-bottom:12px;
+  }
+  .wc-note{font-size:12px;line-height:1.6;color:var(--ink4);margin-bottom:16px;}
+  .wc-check{
+    display:flex;align-items:center;gap:9px;cursor:pointer;
+    font-size:12.5px;color:var(--ink3);margin-bottom:16px;
+  }
+  .wc-check input{width:17px;height:17px;accent-color:var(--gold);flex-shrink:0;}
+  .wc-btn{width:100%;justify-content:center;min-height:46px;font-size:15px;}
+}
 </style>
 </head>
 <body>
@@ -885,11 +978,60 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   <button id="mb-menu" onclick="toggleMobileNav()" aria-label="Menu">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
   </button>
-  <div id="mb-title">Factura</div>
+  <div id="mb-title">NesFactura</div>
   <button id="mb-add" onclick="mobileQuickAdd()" aria-label="Nouveau">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
   </button>
 </header>
+
+<!-- ═══ BIENVENUE (mobile) ═══ -->
+<div id="welcome" class="wc-overlay">
+  <div class="wc-arrow" aria-hidden="true">
+    <svg width="52" height="86" viewBox="0 0 52 86" fill="none">
+      <path d="M30 78 C30 50, 14 38, 12 20" stroke="#B8963E" stroke-width="3"
+            stroke-linecap="round" stroke-dasharray="7 6"/>
+      <path d="M4 26 L12 12 L21 24" stroke="#B8963E" stroke-width="3"
+            stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </div>
+
+  <div class="wc-card">
+    <div class="wc-title">Bienvenue dans NesFactura</div>
+    <p class="wc-lead">
+      Votre gestion commerciale complète : articles, clients, devis et factures,
+      imports eBay et Etsy, statistiques.
+    </p>
+    <p class="wc-menu">
+      Le menu s'ouvre avec le bouton <strong>☰</strong> en haut à gauche.
+      Vous y retrouverez toutes les rubriques.
+    </p>
+    <p class="wc-note">
+      Vos données restent sur cet appareil. Pensez à exporter régulièrement
+      une sauvegarde depuis le menu <strong>Données</strong>.
+    </p>
+
+    <label class="wc-check">
+      <input type="checkbox" id="wc-hide">
+      <span>Ne plus afficher ce message</span>
+    </label>
+
+    <button class="btn btn-primary wc-btn" onclick="closeWelcome()">Commencer</button>
+  </div>
+</div>
+
+
+<!-- ═══ CONFIRMATION ═══ -->
+<div class="overlay" id="modal-confirm">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" id="cf-title">Confirmation</div>
+    <div id="cf-msg" style="font-size:13.5px;line-height:1.7;color:var(--ink2);white-space:pre-line"></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="cfResolve(false)">Annuler</button>
+      <button class="btn btn-primary" id="cf-ok" onclick="cfResolve(true)">Confirmer</button>
+    </div>
+  </div>
+</div>
+
 <div id="nav-scrim" onclick="closeMobileNav()"></div>
 
 <!-- ═══ SÉLECTEUR D'ARTICLE (mobile) ═══ -->
@@ -908,7 +1050,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   <div class="nav-brand">
     <img id="nav-logo" class="nav-brand-logo" alt="logo">
     <div class="nav-brand-text">
-      <div class="nav-brand-name" id="nav-brand-name">Factura</div>
+      <div class="nav-brand-name" id="nav-brand-name">NesFactura</div>
       <div class="nav-brand-sub">Gestion commerciale</div>
     </div>
   </div>
@@ -967,7 +1109,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   <div class="nav-bottom">
     <div class="nav-save"><div class="save-dot" id="save-dot"></div><span id="save-label">Prêt</span></div>
     <div class="nav-version" onclick="go('doc')" title="Voir l'historique des versions">
-      Factura <span id="nav-version-num"></span>
+      NesFactura <span id="nav-version-num"></span>
     </div>
   </div>
 </nav>
@@ -982,27 +1124,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   <button class="mab-btn mab-save"  onclick="mabSave()">Enregistrer</button>
 </div>
 
-<!-- ═══ BARRE D'ONGLETS MOBILE ═══ -->
-<nav id="mobile-tabs">
-  <button class="mt-item" data-panel="ventes" onclick="go('ventes')">
-    <span class="mt-ico">🧾</span><span class="mt-lbl">Ventes</span>
-  </button>
-  <button class="mt-item" data-panel="achats" onclick="go('achats')">
-    <span class="mt-ico">📥</span><span class="mt-lbl">Achats</span>
-  </button>
-  <button class="mt-item" data-panel="articles" onclick="go('articles')">
-    <span class="mt-ico">📦</span><span class="mt-lbl">Articles</span>
-  </button>
-  <button class="mt-item" data-panel="stats" onclick="go('stats')">
-    <span class="mt-ico">📈</span><span class="mt-lbl">Stats</span>
-  </button>
-  <button class="mt-item" data-panel="budget" onclick="go('budget')">
-    <span class="mt-ico">🗂</span><span class="mt-lbl">Structure</span>
-  </button>
-  <button class="mt-item" onclick="toggleMobileNav()">
-    <span class="mt-ico">☰</span><span class="mt-lbl">Plus</span>
-  </button>
-</nav>
+
 
 <!-- ═══ MAIN ═══ -->
 <div id="main">
@@ -1296,6 +1418,16 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
   </div>
   <div class="content">
+      <div class="mobile-only stats-pdf-hint">
+        <div class="sph-txt">
+          Les tableaux de bord se consultent confortablement sur ordinateur.
+          Sur mobile, seul l'essentiel est affiché — l'export reprend l'analyse complète.
+        </div>
+        <button class="btn btn-primary sph-btn" onclick="exportStatsPDF()">
+          Exporter le rapport des ventes en PDF
+        </button>
+      </div>
+
 
     <!-- FILTRES -->
     <div class="card">
@@ -1376,11 +1508,11 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
       </div>
 
       <!-- COURBE CUMULÉE CA -->
-      <div class="chart-card">
+      <div class="chart-card mobile-primary">
         <div class="chart-head">
           <div class="chart-title">📈 Chiffre d'affaires cumulé</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
+        <div class="chart-with-aside" style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
           <div>
             <div class="chart-sub" style="margin-bottom:10px">Courbes cumulées mensuelles par série — cliquez sur la légende pour masquer / afficher</div>
             <div class="chart-svg-wrap" id="chart-ca"></div>
@@ -1411,7 +1543,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
           <div class="legend" id="ca-monthly-legend" style="margin-top:0"></div>
         </div>
         <div class="chart-sub">CA HT par mois — empilé par série, non cumulé · même décomposition que la courbe ci-dessus</div>
-        <div style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
+        <div class="chart-with-aside" style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
           <div class="chart-svg-wrap" id="chart-ca-monthly"></div>
           <div style="background:var(--ivory2);border:1px solid var(--ivory3);border-radius:var(--r8);padding:14px 16px">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--ink4);margin-bottom:10px">Décomposition synchronisée avec la courbe ci-dessus</div>
@@ -1498,6 +1630,16 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
   </div>
   <div class="content">
+      <div class="mobile-only stats-pdf-hint">
+        <div class="sph-txt">
+          Les tableaux de bord se consultent confortablement sur ordinateur.
+          Sur mobile, seul l'essentiel est affiché — l'export reprend l'analyse complète.
+        </div>
+        <button class="btn btn-primary sph-btn" onclick="exportStatsAchatPDF()">
+          Exporter le rapport des achats en PDF
+        </button>
+      </div>
+
 
     <!-- FILTRES -->
     <div class="card">
@@ -1575,11 +1717,11 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
       </div>
 
       <!-- COURBE CUMULÉE -->
-      <div class="chart-card">
+      <div class="chart-card mobile-primary">
         <div class="chart-head">
           <div class="chart-title">📈 Dépenses cumulées</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
+        <div class="chart-with-aside" style="display:grid;grid-template-columns:1fr 220px;gap:20px;align-items:start;margin-top:4px">
           <div>
             <div class="chart-sub" style="margin-bottom:10px">Courbes cumulées mensuelles — cliquez sur la légende pour masquer / afficher</div>
             <div class="chart-svg-wrap" id="sa-chart-ca"></div>
@@ -1664,6 +1806,16 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
   </div>
   <div class="content">
+      <div class="mobile-only stats-pdf-hint">
+        <div class="sph-txt">
+          Les tableaux de bord se consultent confortablement sur ordinateur.
+          Sur mobile, seul l'essentiel est affiché — l'export reprend l'analyse complète.
+        </div>
+        <button class="btn btn-primary sph-btn" onclick="exportMargePDF()">
+          Exporter le rapport de marge en PDF
+        </button>
+      </div>
+
     <div class="card">
       <div class="card-title"><span class="ct-icon">🔎</span> Filtres</div>
       <div class="stats-filters">
@@ -1704,7 +1856,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
       <div id="sm-kpi2" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px"></div>
 
       <!-- ÉVOLUTION MENSUELLE -->
-      <div class="chart-card">
+      <div class="chart-card mobile-primary">
         <div class="chart-head">
           <div class="chart-title">📊 Ventes, Achats réels &amp; Marge mensuelle</div>
           <div class="legend" id="sm-legend-monthly"></div>
@@ -1792,6 +1944,16 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     </div>
   </div>
   <div class="content">
+      <div class="mobile-only stats-pdf-hint">
+        <div class="sph-txt">
+          Les tableaux de bord se consultent confortablement sur ordinateur.
+          Sur mobile, seul l'essentiel est affiché — l'export reprend l'analyse complète.
+        </div>
+        <button class="btn btn-primary sph-btn" onclick="exportBilanPDF()">
+          Exporter le rapport du bilan en PDF
+        </button>
+      </div>
+
 
     <!-- FILTRES -->
     <div class="card">
@@ -1863,8 +2025,9 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
       </div>
 
       <!-- TABLEAU SYNTHÈSE MENSUEL -->
-      <div class="chart-card">
+      <div class="chart-card mobile-primary">
         <div class="chart-head"><div class="chart-title">🗓 Tableau de synthèse mensuel</div></div>
+        <div class="chart-sub mobile-only">Faites défiler le tableau horizontalement pour parcourir les douze mois.</div>
         <div id="sb-table" style="overflow-x:auto"></div>
       </div>
 
@@ -2033,7 +2196,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
             <button class="btn btn-primary" onclick="activateLicense()" style="flex-shrink:0">Activer</button>
           </div>
           <p style="font-size:12px;color:var(--ink4);margin-top:6px">La clé est liée à votre <strong>raison sociale</strong> et votre <strong>SIRET</strong> renseignés dans l'onglet Identité ci-dessus.</p>
-          <a href="https://nesmodels.fr/factura.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none">
+          <a href="https://nesmodels.fr/nesfactura.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none">
             🛒 Acheter une clé de licence
           </a>
         </div>
@@ -2067,7 +2230,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
       </div>
       <div class="card">
         <div class="card-title"><span class="ct-icon">⬆</span> Import / Restauration</div>
-        <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.6">Importez un fichier de sauvegarde Factura (.json). <strong>Attention :</strong> cela remplacera toutes les données actuelles.</p>
+        <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.6">Importez un fichier de sauvegarde NesFactura (.json). <strong>Attention :</strong> cela remplacera toutes les données actuelles.</p>
         <div class="drop-zone" id="drop-zone" onclick="document.getElementById('import-file').click()">
           <div class="dz-icon">📂</div>
           <div class="dz-text">Cliquez ou glissez un fichier <strong>.json</strong> ici</div>
@@ -2137,7 +2300,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
             </div>
             <div class="drop-zone" style="padding:14px" onclick="triggerGenericImport()">
               <div class="dz-icon" style="font-size:24px;margin-bottom:6px">📊</div>
-              <div class="dz-text">Fichier <strong>.xlsx</strong> au format modèle Factura</div>
+              <div class="dz-text">Fichier <strong>.xlsx</strong> au format modèle NesFactura</div>
               <input type="file" id="import-generic" accept=".xlsx,.csv" style="display:none" onchange="importGenericFile(this)">
             </div>
           </div>
@@ -2239,7 +2402,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 ════════════════════════════════════════ -->
 <div class="panel" id="panel-doc">
   <div class="page-header">
-    <div><div class="page-title">Documentation</div><div class="page-sub">Guide d'utilisation de Factura</div></div>
+    <div><div class="page-title">Documentation</div><div class="page-sub">Guide d'utilisation de NesFactura</div></div>
   </div>
   <div class="content">
     <div id="doc-content"></div>
@@ -2574,7 +2737,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.7.5';
+const APP_VERSION = '1.9.0';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -2678,8 +2841,14 @@ function persist(){
 // UTILS
 // ════════════════════════════════════════
 function fmt(n){const v=(+n).toFixed(2);const[i,d]=v.split('.');return i.replace(/\B(?=(\d{3})+(?!\d))/g,' ')+','+d+' €';}
-function lineHT(l){return(+l.qty)*(+l.price)*(1-(+l.remise||0)/100);}
-function invHT(lines){return lines.reduce((s,l)=>s+lineHT(l),0);}
+function lineHT(l){
+  if(!l)return 0;
+  const v=(+l.qty||0)*(+l.price||0)*(1-(+l.remise||0)/100);
+  return isFinite(v)?v:0;
+}
+// Une facture dont les lignes seraient absentes ou corrompues ne doit jamais
+// empêcher l'affichage de la liste : on renvoie 0 plutôt que de lever une erreur.
+function invHT(lines){return Array.isArray(lines)?lines.reduce((s,l)=>s+lineHT(l),0):0;}
 function today(){return new Date().toISOString().slice(0,10);}
 function addDays(d,n){const dt=new Date(d||today());dt.setDate(dt.getDate()+n);return dt.toISOString().slice(0,10);}
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/\n/g,'<br>');}
@@ -2694,6 +2863,13 @@ const DOC_PREFIX={
   DC:'DC-',CC:'CC-',LC:'LC-',FC:'FC-',
   DF:'DF-',CF:'CF-',LF:'LF-',FF:'FF-',
 };
+// Couleurs des badges par type de document.
+// Couleurs des badges par type de document.
+const DOC_BADGE={devis:'background:#EEF4FA;color:#2C5F8A',commande:'background:#FEF3C7;color:#92400E',livraison:'background:#EBF5EE;color:#2D6A4F',facture:'background:#F2F2EF;color:#1C1C1E'};
+
+// Ordre du cycle documentaire : chaque étape se transforme en la suivante.
+const CYCLE=['devis','commande','livraison','facture'];
+
 const DOC_TYPE_LABEL={
   devis:'Devis',commande:'Commande',livraison:'Bon de livraison',facture:'Facture',
 };
@@ -2759,6 +2935,38 @@ function renderArtTagBadges(art){
 //  L'application est complète sur mobile : chaque appareil
 //  possède sa propre base de données locale.
 // ══════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════
+//  FENÊTRE DE BIENVENUE (mobile)
+//  Présente l'application et signale le bouton d'ouverture
+//  du menu, moins évident que sur ordinateur.
+// ══════════════════════════════════════════════════════════
+const LS_WELCOME='fa_welcome_seen';
+
+function maybeShowWelcome(){
+  if(!isMobile())return;
+  let seen=false;
+  try{ seen=localStorage.getItem(LS_WELCOME)==='1'; }catch(e){}
+  if(seen)return;
+  const ov=document.getElementById('welcome');
+  if(ov)ov.classList.add('open');
+}
+
+function closeWelcome(){
+  const ov=document.getElementById('welcome');
+  const cb=document.getElementById('wc-hide');
+  if(cb&&cb.checked){
+    try{ localStorage.setItem(LS_WELCOME,'1'); }catch(e){}
+  }
+  if(ov)ov.classList.remove('open');
+}
+
+// Permet à l'utilisateur de la revoir depuis la documentation
+function resetWelcome(){
+  try{ localStorage.removeItem(LS_WELCOME); }catch(e){}
+  notify('Le message d\'accueil réapparaîtra au prochain démarrage sur mobile');
+}
+
 const MOBILE_BP = 900;
 function isMobile(){ return window.innerWidth <= MOBILE_BP; }
 
@@ -2779,15 +2987,7 @@ function closeMobileNav(){ document.body.classList.remove('nav-open'); }
 // Onglet actif + titre de la barre supérieure
 function syncMobileUI(panel){
   const title = document.getElementById('mb-title');
-  if(title) title.textContent = PANEL_TITLES[panel] || (params.raison || 'Factura');
-
-  document.querySelectorAll('.mt-item').forEach(b=>{
-    const p = b.dataset.panel;
-    b.classList.toggle('active', !!p && (p===panel ||
-      (p==='ventes'  && panel==='nouvelle-vente') ||
-      (p==='achats'  && panel==='nouvel-achat')   ||
-      (p==='stats'   && panel.startsWith('stats'))));
-  });
+  if(title) title.textContent = PANEL_TITLES[panel] || (params.raison || 'NesFactura');
 
   // Le bouton « + » n'a de sens que sur les écrans où l'on crée quelque chose
   const add = document.getElementById('mb-add');
@@ -2838,6 +3038,7 @@ window.addEventListener('resize', ()=>{
   const now=isMobile();
   if(now!==_wasMobile){
     _wasMobile=now;
+    syncChartMetrics();
     const active=document.querySelector('.panel.active');
     const key=active?active.id.replace('panel-',''):'';
     const t=EDIT_PANELS[key];
@@ -3350,10 +3551,10 @@ function autoCreateArticlesFromLines(lines, silent=false){
   return created;
 }
 
-function deleteArticle(id){
+async function deleteArticle(id){
   const a=articles.find(x=>x.id===id);
   if(a&&a.locked){notify('Article verrouillé — déverrouillez-le d\'abord.',false);return;}
-  if(!confirm('Supprimer cet article ?'))return;
+  if(!await askConfirm('Supprimer cet article ?\n\nCette suppression est définitive.',{title:'Supprimer l\'article',okLabel:'Supprimer',danger:true}))return;
   try{localStorage.removeItem('fa_photo_'+id);}catch(e){}
   articles=articles.filter(x=>x.id!==id);persist();renderArticles();notify('Article supprimé');
 }
@@ -3374,7 +3575,7 @@ function exportArticlesCSV(){
       ...platRefs
     ].map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(';');
   });
-  dl('factura-articles-'+new Date().toISOString().slice(0,10)+'.csv',
+  dl('nesfactura-articles-'+new Date().toISOString().slice(0,10)+'.csv',
     '\uFEFF'+[headers.map(h=>`"${h}"`).join(';'),...rows].join('\n'),
     'text/csv;charset=utf-8');
   notify('Export articles téléchargé');
@@ -3572,8 +3773,8 @@ function saveTagType(){
   }
   persist();closeModal('modal-cat');renderTagTypes();renderCatFilter();notify('Attribut enregistré');
 }
-function deleteTagType(id){
-  if(!confirm('Supprimer cet attribut ? Les valeurs affectées aux articles seront perdues.'))return;
+async function deleteTagType(id){
+  if(!await askConfirm('Supprimer cet attribut ?\n\nLes valeurs affectées aux articles seront perdues.',{title:'Supprimer l\'attribut',okLabel:'Supprimer',danger:true}))return;
   tagTypes=tagTypes.filter(t=>t.id!==id);
   articles.forEach(a=>{if(a.tagValues)delete a.tagValues[id];});
   persist();renderTagTypes();renderCatFilter();notify('Attribut supprimé');
@@ -3629,9 +3830,9 @@ function saveTiers(){
   else{tiers.push({id:seq.tiers++,...data});}
   persist();closeModal('modal-tiers');renderTiers(type);notify(type==='client'?'Client enregistré':'Fournisseur enregistré');
 }
-function deleteTiers(id){
+async function deleteTiers(id){
   const t=tiers.find(x=>x.id===id);
-  if(!confirm('Supprimer ce '+(t?t.type:'tiers')+' ?'))return;
+  if(!await askConfirm('Supprimer ce '+(t?t.type:'tiers')+' ?',{title:'Supprimer',okLabel:'Supprimer',danger:true}))return;
   tiers=tiers.filter(x=>x.id!==id);persist();
   if(t)renderTiers(t.type);notify('Supprimé');
 }
@@ -3658,7 +3859,7 @@ function notifyUpdateReady(){
   const b=document.createElement('div');
   b.id='update-banner';
   b.innerHTML=`
-    <span>Une nouvelle version de Factura est disponible.</span>
+    <span>Une nouvelle version de NesFactura est disponible.</span>
     <button onclick="applyUpdate()">Mettre à jour</button>
     <button class="ub-later" onclick="this.parentElement.remove()">Plus tard</button>`;
   document.body.appendChild(b);
@@ -3687,7 +3888,6 @@ function renderInvoiceForm(type){
 
   const dt=S.docType||'facture';
   const dtLabel=DOC_TYPE_LABEL[dt]||'Facture';
-  const CYCLE=['devis','commande','livraison','facture'];
 
   // Pièces jointes (PDFs des transformations précédentes)
   const piecesHTML=(S.pieces||[]).length?`
@@ -3835,11 +4035,19 @@ function renderInvoicesMobile(type,list){
         ${locked?'<span class="mcard-lock">🔒 Verrouillé</span>':''}
       </div>
 
+      ${!locked&&(dtIdx<CYCLE.length-1||dtIdx>0)?`
+      <div class="mcard-cycle">
+        ${dtIdx>0?`<button class="mcc-btn mcc-back" onclick="transformDoc('${i.id}','${type}','down')">
+          ← ${DOC_TYPE_LABEL[CYCLE[dtIdx-1]]}</button>`:'<span></span>'}
+        ${dtIdx<CYCLE.length-1?`<button class="mcc-btn mcc-next" onclick="transformDoc('${i.id}','${type}','up')">
+          ${DOC_TYPE_LABEL[CYCLE[dtIdx+1]]} →</button>`:'<span></span>'}
+      </div>`:''}
+
       <div class="mcard-acts">
-        ${!locked&&dtIdx<CYCLE.length-1?`<button class="btn btn-xs" onclick="transformDoc('${i.id}','${type}','up')" style="color:var(--green);font-weight:600">${upLabel}</button>`:''}
         ${locked?'':`<button class="btn btn-xs" onclick="editInvoice('${i.id}','${type}')">✏️ Modifier</button>`}
         <button class="btn btn-xs" onclick="printInvoice('${i.id}')">🖨 PDF</button>
-        <button class="btn btn-xs" onclick="toggleLockInv('${i.id}','${type}')">${locked?'🔓':'🔒'}</button>
+        <button class="btn btn-xs" onclick="toggleLockInv('${i.id}','${type}')">${locked?'🔓 Déverrouiller':'🔒'}</button>
+        ${locked?'':`<button class="btn btn-xs btn-danger" onclick="deleteInvoice('${i.id}','${type}')">🗑</button>`}
       </div>
 
     </div></td></tr>`;
@@ -4035,8 +4243,21 @@ function updateMabTotal(type){
   const src=document.getElementById('inv-ttc-'+(type||_mabType));
   el.textContent=src?src.textContent:'—';
 }
-function mabSave(){ if(_mabType)saveInvoice(_mabType); }
-function mabPreview(){ if(_mabType)printCurrentInvoice(_mabType); }
+// Retrouve le document en cours d'édition, même si l'état a été perdu
+function mabCurrentType(){
+  if(_mabType)return _mabType;
+  const p=document.querySelector('.panel.active');
+  return p?(EDIT_PANELS[p.id.replace('panel-','')]||null):null;
+}
+function mabSave(){
+  const t=mabCurrentType();
+  if(t)saveInvoice(t);
+  else notify('Aucun document en cours de saisie',false);
+}
+function mabPreview(){
+  const t=mabCurrentType();
+  if(t)printCurrentInvoice(t);
+}
 
 
 // ── Blocs repliables du formulaire (mobile) ──
@@ -4217,8 +4438,8 @@ function onDocTypeChange(type){
   if(titleEl)titleEl.textContent=(DOC_TYPE_LABEL[dt]||'Document')+' de '+(type==='vente'?'vente':'achat');
 }
 
-function resetInvoice(type){
-  if(INV[type].lines.length&&!confirm('Réinitialiser la facture ?'))return;
+async function resetInvoice(type){
+  if(INV[type].lines.length&&!await askConfirm('Réinitialiser ce document ?\n\nLes lignes saisies seront perdues.',{title:'Réinitialiser',okLabel:'Réinitialiser',danger:true}))return;
   INV[type]={lines:[],editId:null,tier:'',tierAddr:'',num:nextNum(type),date:today(),ech:addDays(today(),30),tva:(params.tvaDefault!=null?params.tvaDefault:20),status:params.defaultStatus||'brouillon',notes:'',platform:'',platRef:'',remb:0,docType:'facture',pieces:[]};
   if(type==='vente')renderInvoiceForm('vente');
   else renderInvoiceForm('achat');
@@ -4242,7 +4463,7 @@ function readInvoiceForm(type){
     docType:(fEl(type,'f-doctype')||{}).value||'facture',
     pieces:INV[type].pieces||[],
     remb:parseFloat((fEl(type,'f-remb')||{}).value)||0,
-    lines:[...S.lines],
+    lines:Array.isArray(S.lines)?[...S.lines]:[],
   };
 }
 function saveInvoice(type){
@@ -4250,6 +4471,8 @@ function saveInvoice(type){
   if(!tier.trim()){notify('Renseignez le '+(type==='vente'?'client':'fournisseur')+'.',false);return;}
   if(!INV[type].lines.length){notify('Ajoutez au moins une ligne.',false);return;}
   const inv=readInvoiceForm(type);
+  // Garantie de cohérence : une facture possède toujours un tableau de lignes
+  if(!Array.isArray(inv.lines))inv.lines=[];
   // Auto-créer le tiers (client ou fournisseur) s'il n'existe pas
   const tierType=type==='vente'?'client':'fournisseur';
   findOrCreateTiers(inv.tier, tierType);
@@ -4355,8 +4578,6 @@ function renderInvoices(type){
   if(typeof isMobile==='function'&&isMobile()){return renderInvoicesMobile(type,list);}
   if(!list.length){tb.innerHTML=`<tr><td colspan="10"><div class="empty-state"><div class="es-icon">🧾</div><div class="es-title">Aucune facture</div><div class="es-sub">${fy||fm||fp?'Aucun résultat pour ces filtres':'Aucune facture enregistrée'}</div></div></td></tr>`;return;}
   renderStats(type);
-  const DOC_BADGE={devis:'background:#EEF4FA;color:#2C5F8A',commande:'background:#FEF3C7;color:#92400E',livraison:'background:#EBF5EE;color:#2D6A4F',facture:'background:#F2F2EF;color:#1C1C1E'};
-  const CYCLE=['devis','commande','livraison','facture'];
   tb.innerHTML=[...list].reverse().map(i=>{
     const h=invHT(i.lines),tv=h*i.tva/100,t=h+tv;
     const locked=i.locked||false;
@@ -4415,19 +4636,20 @@ function newDoc(side){
   renderInvoiceForm(side);
 }
 
-function transformDoc(id,type,dir){
+async function transformDoc(id,type,dir){
   const inv=invoices.find(i=>String(i.id)===String(id));
   if(!inv)return;
   if(inv.locked){notify('Document verrouillé.',false);return;}
-  const CYCLE=['devis','commande','livraison','facture'];
   const cur=inv.docType||'facture';
   const idx=CYCLE.indexOf(cur);
   const nextDt=dir==='up'?CYCLE[idx+1]:CYCLE[idx-1];
   if(!nextDt)return;
 
-  const dirLabel=dir==='up'?`en ${DOC_TYPE_LABEL[nextDt]}`:`en ${DOC_TYPE_LABEL[nextDt]}`;
-  if(dir==='down'&&!confirm(`Rétrograder ce document ${dirLabel} ?\nUne pièce jointe PDF sera générée avant la transformation.`))return;
-  if(dir==='up'&&!confirm(`Convertir ce document ${dirLabel} ?\nUne pièce jointe PDF sera générée avant la transformation.`))return;
+  const verbe=dir==='up'?'Convertir':'Rétrograder';
+  if(!await askConfirm(
+      `${verbe} ce document en ${DOC_TYPE_LABEL[nextDt]} ?\n\n`
+      +`Le document actuel (${DOC_TYPE_LABEL[cur]} ${inv.num||''}) sera conservé en pièce jointe.`,
+      {title:verbe+' le document',okLabel:verbe}))return;
 
   // Générer et stocker le PDF AVANT transformation
   storePDFPiece(inv);
@@ -4471,10 +4693,7 @@ function openPiece(invId, pieceIdx){
   const inv=invoices.find(i=>String(i.id)===String(invId));
   if(!inv||!inv.pieces||!inv.pieces[pieceIdx])return;
   const piece=inv.pieces[pieceIdx];
-  const w=window.open('','_blank');
-  w.document.write(piece.html);
-  w.document.close();
-  w.focus();
+  openPrintable(piece.html, 'piece-'+(piece.num||'document'));
 }
 
 function editInvoice(id,type){
@@ -4489,10 +4708,46 @@ function editInvoice(id,type){
   const dt=inv.docType||'facture';
   if(tEl)tEl.textContent=(DOC_TYPE_LABEL[dt]||'Document')+' de '+(type==='vente'?'vente':'achat')+' — Modification';
 }
-function deleteInvoice(id,type){
+// ══════════════════════════════════════════════════════════
+//  CONFIRMATION
+//  Les fenêtres natives confirm() sont bloquées dans certains
+//  navigateurs mobiles et applications intégrées : l'action
+//  était alors annulée sans que rien ne s'affiche.
+// ══════════════════════════════════════════════════════════
+let _cfResolve=null;
+
+function askConfirm(message,opts){
+  const o=opts||{};
+  return new Promise(resolve=>{
+    const ov=document.getElementById('modal-confirm');
+    const msg=document.getElementById('cf-msg');
+    const ttl=document.getElementById('cf-title');
+    const ok=document.getElementById('cf-ok');
+    if(!ov||!msg){ resolve(true); return; }   // ne jamais bloquer l'utilisateur
+    msg.textContent=message;
+    if(ttl)ttl.textContent=o.title||'Confirmation';
+    if(ok){
+      ok.textContent=o.okLabel||'Confirmer';
+      ok.className='btn '+(o.danger?'btn-danger':'btn-primary');
+    }
+    _cfResolve=resolve;
+    ov.classList.add('open');
+  });
+}
+
+function cfResolve(v){
+  const ov=document.getElementById('modal-confirm');
+  if(ov)ov.classList.remove('open');
+  const r=_cfResolve; _cfResolve=null;
+  if(r)r(v);
+}
+
+async function deleteInvoice(id,type){
   const inv=invoices.find(i=>String(i.id)===String(id));
   if(inv&&inv.locked){notify('Facture verrouillée — déverrouillez-la d\'abord.',false);return;}
-  if(!confirm('Supprimer cette facture ?'))return;
+  const quoi=inv?(DOC_TYPE_LABEL[inv.docType||'facture']+' '+(inv.num||'')).trim():'ce document';
+  if(!await askConfirm('Supprimer '+quoi+' ?\n\nCette suppression est définitive.',
+     {title:'Supprimer le document',okLabel:'Supprimer',danger:true}))return;
   invoices=invoices.filter(i=>String(i.id)!==String(id));
   if(inv&&inv.importRef)importedRefsSet.delete(inv.importRef);
   persist();renderInvoices(type);renderStats(type);updateTrialUI();notify('Document supprimé');
@@ -4530,6 +4785,45 @@ function lockSelectedInv(type,lock){
 // ════════════════════════════════════════
 // PRINT
 // ════════════════════════════════════════
+// ══════════════════════════════════════════════════════════
+//  OUVERTURE D'UN DOCUMENT IMPRIMABLE
+//  Les navigateurs mobiles bloquent souvent window.open().
+//  On tente d'abord la fenêtre ; à défaut, le document est
+//  proposé au téléchargement, ce qui permet de l'ouvrir puis
+//  de l'imprimer ou de l'enregistrer en PDF depuis le système.
+// ══════════════════════════════════════════════════════════
+function openPrintable(html, filename){
+  let w=null;
+  try{ w=window.open('','_blank'); }catch(e){ w=null; }
+
+  if(w && w.document){
+    try{
+      w.document.write(html);
+      w.document.close();
+      w.focus();
+      return true;
+    }catch(e){ /* fenêtre fermée entre-temps : on bascule sur le fichier */ }
+  }
+
+  // Repli : fichier téléchargeable
+  try{
+    const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=(filename||'nesfactura-document')+'.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),4000);
+    notify('Document téléchargé — ouvrez-le, puis choisissez Imprimer › Enregistrer en PDF');
+    return true;
+  }catch(e){
+    notify('Impossible d\'ouvrir le document : '+e.message,false);
+    return false;
+  }
+}
+
 function buildPrintHTML(inv){
   const h=invHT(inv.lines),tv=h*inv.tva/100,t=h+tv;
   const remb=inv.remb||0;
@@ -4615,6 +4909,11 @@ table.lines th:last-child{text-align:right}
 }
 </style></head><body>
 <button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<script>
+  // La boîte d'impression s'ouvre d'elle-même : « Enregistrer au format PDF »
+  // y est proposée comme destination. Le bouton permet de la rappeler.
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ window.print(); }catch(e){} }, 350); });
+<\/script>
 <div class="page">
   <div class="header">
     <div class="emetteur">
@@ -4683,13 +4982,13 @@ table.lines th:last-child{text-align:right}
 function printInvoice(id){
   const inv=invoices.find(i=>String(i.id)===String(id));
   if(!inv)return;
-  const w=window.open('','_blank');w.document.write(buildPrintHTML(inv));w.document.close();w.focus();
+  openPrintable(buildPrintHTML(inv), 'facture-'+(inv.num||'document'));
 }
 function printCurrentInvoice(type){
   const tier=(fEl(type,'f-tier')||{}).value||'';
   if(!tier||!INV[type].lines.length){notify('Remplissez le tiers et les lignes d\'abord.',false);return;}
   const inv=readInvoiceForm(type);
-  const w=window.open('','_blank');w.document.write(buildPrintHTML(inv));w.document.close();w.focus();
+  openPrintable(buildPrintHTML(inv), 'facture-'+(inv.num||'document'));
 }
 
 // ════════════════════════════════════════
@@ -4755,7 +5054,7 @@ function loadParamsForm(){
 function updateNavBrand(){
   const nameEl=document.getElementById('nav-brand-name');
   const logoEl=document.getElementById('nav-logo');
-  if(nameEl)nameEl.textContent=params.raison||'Factura';
+  if(nameEl)nameEl.textContent=params.raison||'NesFactura';
   if(logoEl){
     if(logoData){logoEl.src=logoData;logoEl.style.display='block';}
     else{logoEl.style.display='none';}
@@ -4906,9 +5205,9 @@ function addPlatform(){
   inp.value='';
   persist();renderPlatformsList();notify('Canal de vente ajoutée');
 }
-function removePlatform(name){
+async function removePlatform(name){
   if(LOCKED_PLATFORMS.includes(name))return;
-  if(!confirm('Supprimer le canal de vente "'+name+'" ?'))return;
+  if(!await askConfirm('Supprimer le canal de vente « '+name+' » ?',{title:'Supprimer le canal',okLabel:'Supprimer',danger:true}))return;
   params.platforms=params.platforms.filter(p=>p!==name);
   persist();renderPlatformsList();notify('Canal de vente supprimée');
 }
@@ -4932,15 +5231,15 @@ function exportAll(){
     articles:articlesWithPhotos,categories,tagTypes,tiers,invoices,params,logo:logoData,seq,
     importedRefs:[...importedRefsSet],
     budget};
-  dl('factura-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');
+  dl('nesfactura-sauvegarde-'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(data,null,2),'application/json');
   ssRaw(LS.lastExport, new Date().toISOString());
   localStorage.removeItem(LS.dismissReminder);
   hideExportReminder();
   notify('Sauvegarde téléchargée (articles, attributs, factures, paramètres, budget)');
 }
-function importAll(input){
+async function importAll(input){
   if(!input.files||!input.files[0])return;
-  if(!confirm('Importer ce fichier ? Toutes les données actuelles seront remplacées.'))return;
+  if(!await askConfirm('Importer ce fichier ?\n\nToutes les données actuelles seront remplacées.',{title:'Importer une sauvegarde',okLabel:'Importer',danger:true}))return;
   const r=new FileReader();
   r.onload=e=>{
     try{
@@ -5104,7 +5403,7 @@ function populateResetCounts(){
   });
 }
 
-function resetSelectedData(){
+async function resetSelectedData(){
   const sel={
     articles:     document.getElementById('rst-articles')?.checked,
     attributs:    document.getElementById('rst-attributs')?.checked,
@@ -5126,8 +5425,10 @@ function resetSelectedData(){
     imports:'Historique des imports', params:'Paramètres et logo',
   };
   const toDelete=Object.entries(sel).filter(([,v])=>v).map(([k])=>labels[k]);
-  if(!confirm(`⚠️ Suppression définitive et irréversible de :\n\n${toDelete.map(l=>'• '+l).join('\n')}\n\nAvez-vous exporté une sauvegarde ?\n\nCliquez OK pour confirmer.`))return;
-  if(!confirm('Dernière confirmation — ces données seront perdues définitivement.'))return;
+  if(!await askConfirm('Suppression définitive et irréversible de :\n\n'+toDelete.map(l=>'• '+l).join('\n'),
+     {title:'⚠️ Réinitialisation',okLabel:'Continuer',danger:true}))return;
+  if(!await askConfirm('Dernière confirmation.\n\nCes données seront perdues définitivement.',
+     {title:'⚠️ Confirmer la suppression',okLabel:'Supprimer définitivement',danger:true}))return;
 
   if(sel.articles){
     const lockedArts=articles.filter(a=>a.locked);
@@ -5770,18 +6071,39 @@ function monthLabel(key){
   const noms=['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août','Sep','Oct','Nov','Déc'];
   return noms[m-1]+' '+String(y).slice(2);
 }
+// Axe des mois, continu du premier au dernier mois observé.
+// Les mois sans aucun document doivent figurer sur l'axe : les omettre
+// rapprocherait artificiellement deux périodes éloignées et fausserait
+// la lecture d'une courbe cumulée.
 function buildMonthsAxis(invVente,invAchat){
   const keys=new Set();
-  [...invVente,...invAchat].forEach(i=>keys.add(monthKey(i.date)));
+  [...(invVente||[]),...(invAchat||[])].forEach(i=>{
+    const k=monthKey(i.date);
+    if(k)keys.add(k);
+  });
+
   if(!keys.size){
-    // fallback: 6 derniers mois glissants pour ne pas afficher un graphique totalement vide
+    // Aucune donnée : afficher les six derniers mois plutôt qu'un axe vide
     const now=new Date();
     for(let k=5;k>=0;k--){
       const d=new Date(now.getFullYear(),now.getMonth()-k,1);
       keys.add(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`);
     }
+    return [...keys].sort();
   }
-  return [...keys].sort();
+
+  const tries=[...keys].sort();
+  const [y1,m1]=tries[0].split('-').map(Number);
+  const [y2,m2]=tries[tries.length-1].split('-').map(Number);
+  const out=[];
+  let y=y1, m=m1;
+  // Garde-fou : au-delà de 10 ans on s'en tient aux mois réellement présents
+  const limite=120;
+  while((y<y2||(y===y2&&m<=m2)) && out.length<limite){
+    out.push(`${y}-${String(m).padStart(2,'0')}`);
+    m++; if(m>12){m=1;y++;}
+  }
+  return out.length?out:tries;
 }
 
 // ── KPIs ──
@@ -5869,7 +6191,7 @@ function renderDonutSVG(slices){
     startAngle=endAngle;
   });
   // Texte central : total
-  const centerHTML=`<text x="${CX}" y="${CY-6}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">Total</text>
+  const centerHTML=`<text x="${CX}" y="${CY-6}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">Total</text>
     <text x="${CX}" y="${CY+10}" font-size="13" font-weight="700" fill="#1C1C1E" text-anchor="middle" font-family="Inter,sans-serif">${fmtCompact(total)}</text>`;
   const svg=`<svg viewBox="0 0 ${SZ} ${SZ}" width="${SZ}" height="${SZ}" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">${paths}${centerHTML}</svg>`;
 
@@ -5914,6 +6236,8 @@ function onCaAttrTypeChange(){
   renderStatsAll();
 }
 function renderCaMonthlyBars(containerId, months, series, legendId){
+  syncChartMetrics();
+  const _ls=labelStep(months.length);
   const container=document.getElementById(containerId);
   if(!container)return;
   const visibleSeries=series.filter(s=>s.visible!==false);
@@ -5937,13 +6261,13 @@ function renderCaMonthlyBars(containerId, months, series, legendId){
   for(let g=0;g<=4;g++){
     const v=maxV*g/4,gy=CHART_PAD_T+innerH-(v/maxV)*innerH;
     gridHTML+=`<line x1="${CHART_PAD_L}" y1="${gy}" x2="${CHART_W-CHART_PAD_R}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
+    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
   }
   const labelEvery=n>14?Math.ceil(n/12):1;
   months.forEach((m,i)=>{
     const cx=CHART_PAD_L+i*groupW+groupW/2;
     if(i%labelEvery===0||i===n-1)
-      xHTML+=`<text x="${cx}" y="${CHART_H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
+      if(i%_ls===0||i===months.length-1)xHTML+=`<text x="${cx}" y="${CHART_H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
     // Barres empilées
     let stackY=CHART_PAD_T+innerH;
     visibleSeries.forEach(s=>{
@@ -5989,7 +6313,31 @@ function toggleStatsSeries(s){
 // ════════════════════════════════════════
 // MOTEUR DE RENDU SVG — courbes + histogrammes
 // ════════════════════════════════════════
-const CHART_W=760, CHART_H=240, CHART_PAD_L=60, CHART_PAD_B=30, CHART_PAD_T=14, CHART_PAD_R=14;
+// Dimensions du repère SVG. Sur mobile, un gabarit plus étroit évite que
+// la mise à l'échelle ne réduise étiquettes et séries jusqu'à l'illisible :
+// à 760 px comprimés sur 340, tout perdait plus de la moitié de sa taille.
+let CHART_W=760, CHART_H=240, CHART_PAD_L=60, CHART_PAD_B=30, CHART_PAD_T=14, CHART_PAD_R=14, CHART_FS=11;
+
+function syncChartMetrics(){
+  const petit = (typeof isMobile==='function') && isMobile();
+  CHART_W     = petit ? 350 : 760;
+  CHART_H     = petit ? 220 : 240;
+  // Marge gauche : doit contenir « 200 € ». Marge droite : la dernière
+  // étiquette de mois est centrée sur le bord et déborderait sans elle.
+  CHART_PAD_L = petit ?  42 :  60;
+  CHART_PAD_B = petit ?  24 :  30;
+  CHART_PAD_R = petit ?  26 :  20;
+  CHART_PAD_T = petit ?  12 :  14;
+  CHART_FS    = petit ?   9 :  11;
+}
+syncChartMetrics();
+
+// Nombre d'étiquettes d'abscisse affichables sans chevauchement.
+// Sur mobile le repère est plus étroit : on n'en garde qu'une sur deux ou trois.
+function labelStep(n){
+  const max=Math.max(3,Math.floor((CHART_W-CHART_PAD_L-CHART_PAD_R)/46));
+  return n>max?Math.ceil(n/max):1;
+}
 
 function niceMax(v){
   if(v<=0)return 10;
@@ -6003,6 +6351,8 @@ function svgEsc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
 
 // Graphique en courbes cumulées multi-séries
 function renderCumulativeLineChart(containerId, months, series){
+  syncChartMetrics();
+  const _ls=labelStep(months.length);
   const container=document.getElementById(containerId);
   if(!container)return;
   const visibleSeries=series.filter(s=>s.visible!==false&&s.values.some(v=>v>0));
@@ -6034,13 +6384,13 @@ function renderCumulativeLineChart(containerId, months, series){
     const gy=yi(v);
     gridHTML+=`<line x1="${CHART_PAD_L}" y1="${gy}" x2="${CHART_W-CHART_PAD_R}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
     const axLabel=fmtCompact(v);
-    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axLabel}</text>`;
+    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axLabel}</text>`;
   }
   const labelEvery=n>14?Math.ceil(n/12):1;
   let xLabelsHTML='';
   months.forEach((m,i)=>{
     if(i%labelEvery!==0&&i!==n-1)return;
-    xLabelsHTML+=`<text x="${xi(i)}" y="${CHART_H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif" font-weight="500">${monthLabel(m)}</text>`;
+    if(i%_ls===0||i===months.length-1)xLabelsHTML+=`<text x="${xi(i)}" y="${CHART_H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif" font-weight="500">${monthLabel(m)}</text>`;
   });
 
   // ── Zones et lignes (rendu du haut vers le bas pour l'empilement visuel) ──
@@ -6065,7 +6415,7 @@ function renderCumulativeLineChart(containerId, months, series){
     });
   });
 
-  container.innerHTML=`<svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;min-width:480px;max-width:${CHART_W}px" xmlns="http://www.w3.org/2000/svg">
+  container.innerHTML=`<svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;max-width:${CHART_W}px" xmlns="http://www.w3.org/2000/svg">
     ${gridHTML}
     <line x1="${CHART_PAD_L}" y1="${CHART_PAD_T}" x2="${CHART_PAD_L}" y2="${CHART_H-CHART_PAD_B}" stroke="#D8D8D2" stroke-width="1"/>
     <line x1="${CHART_PAD_L}" y1="${CHART_H-CHART_PAD_B}" x2="${CHART_W-CHART_PAD_R}" y2="${CHART_H-CHART_PAD_B}" stroke="#D8D8D2" stroke-width="1"/>
@@ -6080,6 +6430,8 @@ function renderBarChart(containerId, months, values, color, formatter, axisFmt){
 
 // Histogramme empilé multi-séries
 function renderStackedBarChart(containerId, months, series, formatter, axisFmt){
+  syncChartMetrics();
+  const _ls=labelStep(months.length);
   const container=document.getElementById(containerId);
   if(!container)return;
   const activeSeries=series.filter(s=>s.values.some(v=>v>0));
@@ -6101,7 +6453,7 @@ function renderStackedBarChart(containerId, months, series, formatter, axisFmt){
     const v=maxV*g/4;
     const gy=CHART_PAD_T+innerH-(v/maxV)*innerH;
     gridHTML+=`<line x1="${CHART_PAD_L}" y1="${gy}" x2="${CHART_W-CHART_PAD_R}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axisFmt?axisFmt(v):fmtCompact(v)}</text>`;
+    gridHTML+=`<text x="${CHART_PAD_L-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif" font-weight="500">${axisFmt?axisFmt(v):fmtCompact(v)}</text>`;
   }
   const labelEvery=months.length>14?Math.ceil(months.length/12):1;
   let xLabelsHTML='',barsHTML='';
@@ -6118,10 +6470,10 @@ function renderStackedBarChart(containerId, months, series, formatter, axisFmt){
       }
     });
     if(mi%labelEvery===0||mi===months.length-1){
-      xLabelsHTML+=`<text x="${bx(mi)+barW/2}" y="${CHART_H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif" font-weight="500">${monthLabel(m)}</text>`;
+      if(mi%_ls===0||mi===months.length-1)xLabelsHTML+=`<text x="${bx(mi)+barW/2}" y="${CHART_H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif" font-weight="500">${monthLabel(m)}</text>`;
     }
   });
-  container.innerHTML=`<svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;min-width:480px;max-width:${CHART_W}px" xmlns="http://www.w3.org/2000/svg">
+  container.innerHTML=`<svg viewBox="0 0 ${CHART_W} ${CHART_H}" style="width:100%;height:auto;max-width:${CHART_W}px" xmlns="http://www.w3.org/2000/svg">
     ${gridHTML}
     <line x1="${CHART_PAD_L}" y1="${CHART_PAD_T}" x2="${CHART_PAD_L}" y2="${yBase}" stroke="#D8D8D2" stroke-width="1"/>
     <line x1="${CHART_PAD_L}" y1="${yBase}" x2="${CHART_W-CHART_PAD_R}" y2="${yBase}" stroke="#D8D8D2" stroke-width="1"/>
@@ -6227,6 +6579,7 @@ function renderTopClients(){
 
 // ── Orchestration globale ──
 function renderStatsAll(){
+  syncChartMetrics();
   populateStatsPlatformOptions();
   const platFilter=(document.getElementById('st-platform')||{}).value||'';
 
@@ -6999,7 +7352,7 @@ function exportStatsPDF(){
   const donutHTML=donutEl?donutEl.innerHTML:'';
 
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
-<title>Statistiques — ${esc(params.raison||'Factura')}</title>
+<title>Statistiques — ${esc(params.raison||'NesFactura')}</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#1C1C1E;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -7032,6 +7385,11 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#1C1C1E;
 @media print{.print-btn{display:none!important}.page{padding:16px 20px}@page{margin:10mm}}
 </style></head><body>
 <button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<script>
+  // La boîte d'impression s'ouvre d'elle-même : « Enregistrer au format PDF »
+  // y est proposée comme destination. Le bouton permet de la rappeler.
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ window.print(); }catch(e){} }, 350); });
+<\/script>
 <div class="page">
   <div class="header">
     <div class="company">${logoHTML}<div class="company-name">${esc(params.raison||'Mon Entreprise')}</div></div>
@@ -7098,14 +7456,12 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;font-size:12px;color:#1C1C1E;
 
   <div class="footer">
     <span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span>
-    <span>Factura — Gestion Commerciale</span>
+    <span>NesFactura — Gestion Commerciale</span>
   </div>
 </div></body></html>`;
 
-  const w=window.open('','_blank');
-  w.document.write(html);
-  w.document.close();
-  w.focus();
+  const fileBase='nesfactura-statistiques-ventes-'+today();
+  openPrintable(html, fileBase);
 }
 
 
@@ -7250,6 +7606,7 @@ function getFilteredAchatInvoices(){
 }
 
 function renderStatsAchatAll(){
+  syncChartMetrics();
   populateSaFilters();
   const invAchat=getFilteredAchatInvoices();
   const months=buildMonthsAxis([],invAchat);
@@ -7352,7 +7709,7 @@ function renderDonutAchat(){
     paths+=`<path d="M${x1},${y1} A${R},${R} 0 ${large},1 ${x2},${y2} L${ix2},${iy2} A${r},${r} 0 ${large},0 ${ix1},${iy1} Z" fill="${color}" opacity="0.9" stroke="#fff" stroke-width="1.5"><title>${svgEsc(name)} : ${svgEsc(fmt(val))} (${pct}%)</title></path>`;
     startAngle=endAngle;
   });
-  const svg=`<svg viewBox="0 0 ${SZ} ${SZ}" width="${SZ}" height="${SZ}" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">${paths}<text x="${CX}" y="${CY-6}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">Total</text><text x="${CX}" y="${CY+10}" font-size="13" font-weight="700" fill="#1C1C1E" text-anchor="middle" font-family="Inter,sans-serif">${fmtCompact(total)}</text></svg>`;
+  const svg=`<svg viewBox="0 0 ${SZ} ${SZ}" width="${SZ}" height="${SZ}" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0">${paths}<text x="${CX}" y="${CY-6}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">Total</text><text x="${CX}" y="${CY+10}" font-size="13" font-weight="700" fill="#1C1C1E" text-anchor="middle" font-family="Inter,sans-serif">${fmtCompact(total)}</text></svg>`;
   const legend=entries.map(([name,val],i)=>{const pct=Math.round(val/total*100),color=platformColor(name,i);return`<div style="display:flex;align-items:center;gap:7px;padding:5px 0;border-bottom:1px solid var(--ivory3)"><span style="width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span><span style="flex:1;font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(name)}">${esc(name)}</span><span style="font-size:11px;color:var(--ink4);flex-shrink:0;margin-left:4px">${pct}%</span><span style="font-size:12px;font-weight:600;color:var(--ink);flex-shrink:0;margin-left:6px">${fmt(val)}</span></div>`;}).join('');
   container.innerHTML=svg+`<div style="flex:1;min-width:0;max-height:200px;overflow-y:auto">${legend}</div>`;
 }
@@ -7409,6 +7766,11 @@ function exportStatsAchatPDF(){
   const css=pdfBaseCSS(accent,accentText);
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Stats Achats</title><style>${css}</style></head><body>
   <button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<script>
+  // La boîte d'impression s'ouvre d'elle-même : « Enregistrer au format PDF »
+  // y est proposée comme destination. Le bouton permet de la rappeler.
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ window.print(); }catch(e){} }, 350); });
+<\/script>
   <div class="page">
     <div class="header">
       <div class="company">${logoHTML}<div class="company-name">${esc(params.raison||'Mon Entreprise')}</div></div>
@@ -7418,17 +7780,23 @@ function exportStatsAchatPDF(){
       </div>
     </div>
     <div class="kpis">${kpiHTML}</div>
+    <div class="section"><div class="section-title">📈 Dépenses cumulées</div><div class="chart-box">${getSVG('sa-chart-ca')}</div></div>
     <div class="g2">
-      <div class="section"><div class="section-title">📊 Achats par mois</div><div class="chart-box">${getSVG('sa-chart-monthly')}</div></div>
+      <div class="section"><div class="section-title">📊 Dépenses HT mensuelles</div><div class="chart-box">${getSVG('sa-chart-monthly')}</div></div>
       <div class="section"><div class="section-title">🍩 Répartition des achats</div><div class="chart-box">${getSVG('sa-donut-chart')}</div></div>
     </div>
     <div class="g2">
       <div class="section"><div class="section-title">🏭 Top fournisseurs — Montant</div>${getTopHTML('sa-top-fournisseurs-ca')}</div>
       <div class="section"><div class="section-title">🏭 Top fournisseurs — Quantité</div>${getTopHTML('sa-top-fournisseurs-qty')}</div>
     </div>
-    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>Factura — Gestion Commerciale</span></div>
+    <div class="g2">
+      <div class="section"><div class="section-title">📦 Top articles achetés</div>${getTopHTML('sa-top-articles')}</div>
+      <div class="section"><div class="section-title">🏷 Répartition par attribut</div>${getTopHTML('sa-top-categories')}</div>
+    </div>
+    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>NesFactura — Gestion Commerciale</span></div>
   </div></body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();
+  const fileBase='nesfactura-statistiques-achats-'+today();
+  openPrintable(html, fileBase);
 }
 
 // ════════════════════════════════════════
@@ -7530,8 +7898,8 @@ function addBudgetRow(section){
   data[year][section].push({id:Date.now(),label:'',values:{}});saveBudgetData(data);renderBudget();
   setTimeout(()=>{const inputs=document.querySelectorAll('#budget-tbody input[type="text"]');if(inputs.length)inputs[inputs.length-1].focus();},50);
 }
-function deleteBudgetRow(year,section,ri){
-  if(!confirm('Supprimer cette ligne ?'))return;
+async function deleteBudgetRow(year,section,ri){
+  if(!await askConfirm('Supprimer cette ligne budgétaire ?',{title:'Supprimer la ligne',okLabel:'Supprimer',danger:true}))return;
   const data=getBudgetData();data[year][section].splice(ri,1);saveBudgetData(data);renderBudget();
 }
 function moveBudgetFocus(input,ri,section,month){
@@ -7581,6 +7949,7 @@ function populateSbYears(){
 function resetSbFilters(){populateSbYears();renderBilan();}
 
 function renderBilan(){
+  syncChartMetrics();
   populateSbYears();
   const year=document.getElementById('sb-year')?.value||String(new Date().getFullYear());
   const MONTHS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
@@ -7633,10 +8002,10 @@ function renderSbFluxChart(months,caVbyM,structRecM,caAbyM,structDepM){
   const maxV=niceMax(Math.max(1,...allVals));
   const xi=i=>PL+i*groupW+groupW/2,yi=v=>PT+innerH-v/maxV*innerH;
   let grid='',bars='',xlab='';
-  for(let g=0;g<=4;g++){const v=maxV*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
+  for(let g=0;g<=4;g++){const v=maxV*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
   caVbyM.forEach((v,i)=>{
     const cx=xi(i);
-    xlab+=`<text x="${cx}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;
+    xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;
     const totR=v+structRecM[i],hCA=v/maxV*innerH,hSR=structRecM[i]/maxV*innerH;
     bars+=`<rect x="${cx-barW-2}" y="${yi(totR)}" width="${barW}" height="${Math.max(1,hSR)}" fill="#6FCF97" opacity=".85" rx="1"><title>${months[i]} Recettes structure : ${svgEsc(fmt(structRecM[i]))}</title></rect>`;
     bars+=`<rect x="${cx-barW-2}" y="${yi(v)}" width="${barW}" height="${Math.max(1,hCA)}" fill="#2D6A4F" opacity=".9" rx="1"><title>${months[i]} CA Ventes : ${svgEsc(fmt(v))}</title></rect>`;
@@ -7658,9 +8027,9 @@ function renderSbNetMonthlyChart(months,netM){
   const zero=PT+innerH-(0-minV)/range*innerH;
   const xi=i=>PL+i*groupW+groupW/2,yi=v=>PT+innerH-(v-minV)/range*innerH;
   let grid='',bars='',xlab='';
-  for(let g=0;g<=4;g++){const v=minV+(maxV-minV)*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
+  for(let g=0;g<=4;g++){const v=minV+(maxV-minV)*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
   grid+=`<line x1="${PL}" y1="${zero}" x2="${W-PR}" y2="${zero}" stroke="#9A9990" stroke-width="1.5" stroke-dasharray="4 3"/>`;
-  netM.forEach((v,i)=>{const cx=xi(i),c=v>=0?'#2D6A4F':'#DC2626',h=Math.abs(v/range*innerH);bars+=`<rect x="${cx-barW/2}" y="${v>=0?yi(v):zero}" width="${barW}" height="${Math.max(1,h)}" fill="${c}" opacity=".85" rx="2"><title>${months[i]} : ${svgEsc(fmt(v))}</title></rect>`;xlab+=`<text x="${cx}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
+  netM.forEach((v,i)=>{const cx=xi(i),c=v>=0?'#2D6A4F':'#DC2626',h=Math.abs(v/range*innerH);bars+=`<rect x="${cx-barW/2}" y="${v>=0?yi(v):zero}" width="${barW}" height="${Math.max(1,h)}" fill="${c}" opacity=".85" rx="2"><title>${months[i]} : ${svgEsc(fmt(v))}</title></rect>`;xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${bars}${xlab}</svg>`;
 }
 
@@ -7673,12 +8042,12 @@ function renderSbNetCumulChart(months,cumulM){
   const zero=PT+innerH-(0-minV)/range*innerH;
   const xi=i=>PL+i*(innerW/Math.max(n-1,1)),yi=v=>PT+innerH-(v-minV)/range*innerH;
   let grid='',path='',area='',pts='',xlab='';
-  for(let g=0;g<=4;g++){const v=minV+(maxV-minV)*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
+  for(let g=0;g<=4;g++){const v=minV+(maxV-minV)*g/4,gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/><text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;}
   grid+=`<line x1="${PL}" y1="${zero}" x2="${W-PR}" y2="${zero}" stroke="#9A9990" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   const ptList=cumulM.map((v,i)=>`${xi(i)},${yi(v)}`);
   path=`<polyline points="${ptList.join(' ')}" fill="none" stroke="${PLATFORM_COLORS[0]}" stroke-width="2.5" stroke-linejoin="round"/>`;
   area=`<polygon points="${ptList[0].split(',')[0]},${zero} ${ptList.join(' ')} ${ptList[11].split(',')[0]},${zero}" fill="${PLATFORM_COLORS[0]}" opacity=".1"/>`;
-  cumulM.forEach((v,i)=>{const c=v>=0?'#2D6A4F':'#DC2626';pts+=`<circle cx="${xi(i)}" cy="${yi(v)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${months[i]} cumulé : ${svgEsc(fmt(v))}</title></circle>`;xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
+  cumulM.forEach((v,i)=>{const c=v>=0?'#2D6A4F':'#DC2626';pts+=`<circle cx="${xi(i)}" cy="${yi(v)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${months[i]} cumulé : ${svgEsc(fmt(v))}</title></circle>`;xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${months[i]}</text>`;});
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${area}${path}${pts}${xlab}</svg>`;
 }
 
@@ -7695,26 +8064,31 @@ function renderSbTopStructure(elId,rows,section){
 function renderSbTable(months,year,caVbyM,structRecM,totRecM,caAbyM,structDepM,totDepM,netM,cumulM){
   const el=document.getElementById('sb-table');if(!el)return;
   const th='padding:8px 6px;text-align:right;font-size:11px;font-weight:700;color:#F5F5F0;white-space:nowrap;background:#232325;border-bottom:2px solid #555';
-  const thF='padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:#F5F5F0;min-width:160px;position:sticky;left:0;background:#232325;border-bottom:2px solid #555';
+  // Sur mobile la colonne des libellés est resserrée : chaque pixel qu'elle
+  // libère laisse apparaître un mois de plus.
+  const etroit=(typeof isMobile==='function')&&isMobile();
+  const wLib=etroit?104:160;
+  const padLib=etroit?'8px 6px':'8px 12px';
+  const thF=`padding:${padLib};text-align:left;font-size:11px;font-weight:700;color:#F5F5F0;width:${wLib}px;min-width:${wLib}px;max-width:${wLib}px;position:sticky;left:0;background:#232325;border-bottom:2px solid #555`;
   const totRec=totRecM.reduce((s,v)=>s+v,0),totDep=totDepM.reduce((s,v)=>s+v,0),netAn=netM.reduce((s,v)=>s+v,0);
   const rows=[
     {label:'CA Ventes HT',vals:caVbyM,color:'#2D6A4F',bold:false,total:caVbyM.reduce((s,v)=>s+v,0)},
-    {label:'Recettes structure',vals:structRecM,color:'#6FCF97',bold:false,total:structRecM.reduce((s,v)=>s+v,0)},
+    {label:etroit?'Rec. structure':'Recettes structure',vals:structRecM,color:'#6FCF97',bold:false,total:structRecM.reduce((s,v)=>s+v,0)},
     {label:'Total recettes',vals:totRecM,color:'#2D6A4F',bold:true,total:totRec,sep:true},
     {label:'Achats HT',vals:caAbyM,color:'#C05621',bold:false,total:caAbyM.reduce((s,v)=>s+v,0)},
-    {label:'Dépenses structure',vals:structDepM,color:'#F6AD55',bold:false,total:structDepM.reduce((s,v)=>s+v,0)},
+    {label:etroit?'Dép. structure':'Dépenses structure',vals:structDepM,color:'#F6AD55',bold:false,total:structDepM.reduce((s,v)=>s+v,0)},
     {label:'Total dépenses',vals:totDepM,color:'#C05621',bold:true,total:totDep,sep:true},
     {label:'Résultat net',vals:netM,color:'auto',bold:true,total:netAn,sep:true,signed:true},
     {label:'Résultat cumulé',vals:cumulM,color:'auto',bold:true,total:netAn,sep:false,signed:true,cumul:true},
   ];
-  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:1050px">
+  el.innerHTML=`<table style="width:100%;border-collapse:collapse;font-size:${etroit?11:12}px;min-width:${etroit?680:1050}px">
     <thead><tr style="background:#232325">
       <th style="${thF}">Indicateur</th>
       ${months.map(m=>`<th style="${th}">${m}</th>`).join('')}
       <th style="${th};color:#B8963E">Total</th>
     </tr></thead>
     <tbody>${rows.map(r=>{const isNet=r.signed;return `<tr style="${r.sep?'border-top:2px solid var(--ivory3)':'border-top:1px solid var(--ivory3)'}${r.bold?';background:var(--ivory2)':''}">
-      <td style="padding:8px 12px;font-weight:${r.bold?'700':'500'};color:${r.bold?'var(--ink)':'var(--ink2)'};position:sticky;left:0;background:${r.bold?'var(--ivory2)':'var(--ivory)'}">${r.label}</td>
+      <td style="padding:${padLib};font-weight:${r.bold?'700':'500'};color:${r.bold?'var(--ink)':'var(--ink2)'};width:${wLib}px;max-width:${wLib}px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;position:sticky;left:0;background:${r.bold?'var(--ivory2)':'var(--ivory)'}">${r.label}</td>
       ${r.vals.map(v=>{const c=isNet?(v>=0?'#2D6A4F':'#DC2626'):(r.color==='auto'?'var(--ink)':r.color);return `<td style="padding:8px 6px;text-align:right;font-weight:${r.bold?'700':'400'};color:${c};white-space:nowrap">${v?fmtCompact(v):''}</td>`;}).join('')}
       <td style="padding:8px 6px;text-align:right;font-weight:800;color:${isNet?(r.total>=0?'#2D6A4F':'#DC2626'):(r.color==='auto'?'var(--ink)':r.color)};white-space:nowrap">${r.cumul?'':fmtCompact(r.total)}</td>
     </tr>`;}).join('')}</tbody>
@@ -7827,6 +8201,11 @@ function exportMargePDF(){
   const css=pdfBaseCSS(accent,accentText);
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Marge & Rentabilité</title><style>${css}</style></head><body>
   <button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<script>
+  // La boîte d'impression s'ouvre d'elle-même : « Enregistrer au format PDF »
+  // y est proposée comme destination. Le bouton permet de la rappeler.
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ window.print(); }catch(e){} }, 350); });
+<\/script>
   <div class="page">
     <div class="header">
       <div class="company">${logoHTML}<div class="company-name">${esc(params.raison||'Mon Entreprise')}</div></div>
@@ -7845,9 +8224,10 @@ function exportMargePDF(){
     <div class="section"><div class="section-title">⭐ Rentabilité théorique par article</div>${getListHTML('sm-top-articles')}</div>
     <div class="section"><div class="section-title">📊 Rentabilité réelle par article (ventes vs achats réels)</div>${getListHTML('sm-top-real')}</div>
     <div class="section"><div class="section-title">🗓 Comparaison annuelle N vs N-1</div>${getListHTML('sm-comparaison')}</div>
-    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>Factura — Marge &amp; Rentabilité</span></div>
+    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>NesFactura — Marge &amp; Rentabilité</span></div>
   </div></body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();
+  const fileBase='nesfactura-marge-rentabilite-'+today();
+  openPrintable(html, fileBase);
 }
 
 function exportBilanPDF(){
@@ -7865,6 +8245,11 @@ function exportBilanPDF(){
   const css=pdfBaseCSS(accent,accentText)+'@page{size:A4 landscape;margin:8mm}';
   const html=`<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><title>Bilan financier ${year}</title><style>${css}</style></head><body>
   <button class="print-btn" onclick="window.print()">🖨 Imprimer / PDF</button>
+<script>
+  // La boîte d'impression s'ouvre d'elle-même : « Enregistrer au format PDF »
+  // y est proposée comme destination. Le bouton permet de la rappeler.
+  window.addEventListener('load',function(){ setTimeout(function(){ try{ window.print(); }catch(e){} }, 350); });
+<\/script>
   <div class="page">
     <div class="header">
       <div class="company">${logoHTML}<div class="company-name">${esc(params.raison||'Mon Entreprise')}</div></div>
@@ -7885,9 +8270,10 @@ function exportBilanPDF(){
       <div class="section"><div class="section-title">🔴 Dépenses de structure</div>${getHTML('sb-top-depenses')}</div>
     </div>
     <div class="section"><div class="section-title">🗓 Tableau de synthèse mensuel</div>${buildBilanTableForPdf(year)}</div>
-    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>Factura — Bilan financier</span></div>
+    <div class="footer"><span>${esc(params.raison||'')}${params.siret?' · SIRET : '+esc(params.siret):''}</span><span>NesFactura — Bilan financier</span></div>
   </div></body></html>`;
-  const w=window.open('','_blank');w.document.write(html);w.document.close();w.focus();
+  const fileBase='nesfactura-bilan-financier-'+today();
+  openPrintable(html, fileBase);
 }
 
 
@@ -8037,6 +8423,7 @@ function getSmInvoices(){
   };
 }
 function renderStatsMarge(){
+  syncChartMetrics();
   populateSmYearOptions();
   const {v:invV,a:invA}=getSmInvoices();
   const caV=invV.reduce((s,i)=>s+invHT(i.lines),0);
@@ -8098,6 +8485,7 @@ function renderStatsMarge(){
 
 
 function renderMargeMonthlyChart(months,vVals,aVals,margeVals){
+  syncChartMetrics();
   const container=document.getElementById('sm-chart-monthly');
   const legendEl=document.getElementById('sm-legend-monthly');
   if(!container)return;
@@ -8116,13 +8504,13 @@ function renderMargeMonthlyChart(months,vVals,aVals,margeVals){
   for(let g=0;g<=4;g++){
     const v=minVal+(maxVal-minVal)*g/4,gy=yi(v);
     grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
+    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
   }
   grid+=`<line x1="${PL}" y1="${zero}" x2="${W-PR}" y2="${zero}" stroke="#9A9990" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   const le=n>14?Math.ceil(n/12):1;
   months.forEach((m,i)=>{
     const cx=xi(i);
-    if(i%le===0||i===n-1)xlab+=`<text x="${cx}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
+    if(i%le===0||i===n-1)xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
     const hV=Math.abs(vVals[i]/range*innerH);
     bars+=`<rect x="${cx-barW-1}" y="${Math.min(zero,yi(vVals[i]))}" width="${barW}" height="${Math.max(1,hV)}" fill="${PLATFORM_COLORS[0]}" opacity=".85" rx="1"><title>${svgEsc(monthLabel(m))} Ventes : ${svgEsc(fmt(vVals[i]))}</title></rect>`;
     const hA=Math.abs(aVals[i]/range*innerH);
@@ -8138,6 +8526,7 @@ function renderMargeMonthlyChart(months,vVals,aVals,margeVals){
   if(legendEl)legendEl.innerHTML=`<div class="legend-item"><span class="legend-line" style="background:${PLATFORM_COLORS[0]}"></span>CA Ventes HT</div><div class="legend-item"><span class="legend-line" style="background:${PLATFORM_COLORS[2]}"></span>Couts Achats HT</div><div class="legend-item"><span class="legend-line" style="background:#2D6A4F"></span>Marge brute</div>`;
 }
 function renderTauxMargeChart(months,vVals,aVals){
+  syncChartMetrics();
   const container=document.getElementById('sm-chart-taux');
   if(!container)return;
   if(!months.length){container.innerHTML='<div class="chart-empty">Aucune donnee</div>';return;}
@@ -8154,7 +8543,7 @@ function renderTauxMargeChart(months,vVals,aVals){
   for(let g=0;g<=4;g++){
     const v=minT+(maxT-minT)*g/4,gy=yi(v);
     grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${v.toFixed(0)}%</text>`;
+    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${v.toFixed(0)}%</text>`;
   }
   [{v:0,c:'#DC2626'},{v:30,c:'#92400E'},{v:50,c:'#2D6A4F'}].forEach(({v,c})=>{
     if(v>=minT&&v<=maxT){const gy=yi(v);grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="${c}" stroke-width="1" stroke-dasharray="5 3" opacity=".5"/><text x="${W-PR+6}" y="${gy+3}" font-size="10" fill="${c}" opacity=".7">${v}%</text>`;}
@@ -8164,7 +8553,7 @@ function renderTauxMargeChart(months,vVals,aVals){
   taux.forEach((t,i)=>{
     if(t===null)return;
     ptList.push(`${xi(i)},${yi(t)}`);
-    if(i%le===0||i===n-1)xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(months[i])}</text>`;
+    if(i%le===0||i===n-1)xlab+=`<text x="${xi(i)}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(months[i])}</text>`;
     const c=t>=30?'#2D6A4F':t>=0?'#92400E':'#DC2626';
     pts+=`<circle cx="${xi(i)}" cy="${yi(t)}" r="3.5" fill="${c}" stroke="#fff" stroke-width="1.5"><title>${svgEsc(monthLabel(months[i]))} Taux : ${t.toFixed(1)}%</title></circle>`;
   });
@@ -8175,6 +8564,7 @@ function renderTauxMargeChart(months,vVals,aVals){
   container.innerHTML=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">${grid}<line x1="${PL}" y1="${PT}" x2="${PL}" y2="${H-PB}" stroke="#D8D8D2" stroke-width="1"/>${area}${path}${pts}${xlab}</svg>`;
 }
 function renderTheoChart(months, invV){
+  syncChartMetrics();
   const container=document.getElementById('sm-chart-theo');
   if(!container)return;
   const byMTheo={},byMCA={};
@@ -8212,13 +8602,13 @@ function renderTheoChart(months, invV){
   for(let g=0;g<=4;g++){
     const v=minVal+(maxVal-minVal)*g/4,gy=yi(v);
     grid+=`<line x1="${PL}" y1="${gy}" x2="${W-PR}" y2="${gy}" stroke="#E8E8E3" stroke-width="1"/>`;
-    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="11" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
+    grid+=`<text x="${PL-8}" y="${gy+3}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="end" font-family="Inter,sans-serif">${fmtCompact(v)}</text>`;
   }
   grid+=`<line x1="${PL}" y1="${zero}" x2="${W-PR}" y2="${zero}" stroke="#9A9990" stroke-width="1.5" stroke-dasharray="4 3"/>`;
   const le=n>14?Math.ceil(n/12):1;
   months.forEach((m,i)=>{
     const cx=xi(i);
-    if(i%le===0||i===n-1)xlab+=`<text x="${cx}" y="${H-8}" font-size="11" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
+    if(i%le===0||i===n-1)xlab+=`<text x="${cx}" y="${H-8}" font-size="${CHART_FS}" fill="#6B6B6F" text-anchor="middle" font-family="Inter,sans-serif">${monthLabel(m)}</text>`;
     if(caV[i]>0){const h=caV[i]/range*innerH;bars+=`<rect x="${cx-barW-1}" y="${yi(caV[i])}" width="${barW}" height="${Math.max(1,h)}" fill="${PLATFORM_COLORS[0]}" opacity=".85" rx="1"><title>${svgEsc(monthLabel(m))} CA : ${svgEsc(fmt(caV[i]))}</title></rect>`;}
     if(theoV[i]>0){const h=theoV[i]/range*innerH;bars+=`<rect x="${cx+1}" y="${yi(theoV[i])}" width="${barW}" height="${Math.max(1,h)}" fill="${PLATFORM_COLORS[4]}" opacity=".8" rx="1"><title>${svgEsc(monthLabel(m))} Coût rev. : ${svgEsc(fmt(theoV[i]))}</title></rect>`;}
     if(i>0){const mc=margeV[i]>=0?'#2D6A4F':'#DC2626';line+=`<line x1="${xi(i-1)}" y1="${yi(margeV[i-1])}" x2="${cx}" y2="${yi(margeV[i])}" stroke="${mc}" stroke-width="2"/>`;}
@@ -8347,7 +8737,7 @@ const DOC_SECTIONS = [
   {
     icon:'🧾', title:'Ventes & Achats',
     content:`
-<p>Factura gère deux flux documentaires distincts : <strong>Ventes</strong> (clients) et <strong>Achats</strong> (fournisseurs), avec les mêmes types de documents : Devis, Commande, Bon de livraison, Facture.</p>
+<p>NesFactura gère deux flux documentaires distincts : <strong>Ventes</strong> (clients) et <strong>Achats</strong> (fournisseurs), avec les mêmes types de documents : Devis, Commande, Bon de livraison, Facture.</p>
 <h4>Cycle documentaire</h4>
 <p>Un document peut être transformé en document du niveau suivant (Devis → Commande → BL → Facture) via le bouton <strong>→</strong> sur la ligne de liste. La transformation génère automatiquement un PDF du document original et le joint à la nouvelle pièce. La rétrogradation est également possible.</p>
 <h4>Numérotation</h4>
@@ -8370,7 +8760,7 @@ Un avertissement s'affiche si elles venaient \u00e0 manquer.</p>
 <h4>Facturation \u00e9lectronique</h4>
 <p>La r\u00e9forme fran\u00e7aise impose progressivement l'\u00e9change de factures au format structur\u00e9
 (Factur-X, UBL) via une plateforme agr\u00e9\u00e9e pour les \u00e9changes entre entreprises assujetties \u00e0 la TVA.</p>
-<p>Factura produit aujourd'hui des factures PDF, valables pour les ventes aux particuliers
+<p>NesFactura produit aujourd'hui des factures PDF, valables pour les ventes aux particuliers
 et pour l'archivage. Si votre activit\u00e9 rel\u00e8ve du B2B assujetti, v\u00e9rifiez le calendrier
 applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
 
@@ -8380,7 +8770,7 @@ applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
   {
     icon:'📥', title:'Imports eBay & Etsy',
     content:`
-<p>Factura importe les transactions depuis les exports CSV des plateformes. Accédez aux imports depuis <strong>Données</strong>.</p>
+<p>NesFactura importe les transactions depuis les exports CSV des plateformes. Accédez aux imports depuis <strong>Données</strong>.</p>
 <h4>eBay — Rapport de transactions</h4>
 <p><strong>Où trouver le fichier</strong> — depuis la page de votre boutique eBay :</p>
 <ol class="doc-steps">
@@ -8524,7 +8914,7 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
   {
     icon:'🔐', title:'Licence',
     content:`
-<p>Factura fonctionne en mode <strong>essai gratuit</strong> (5 documents tous types confondus). Au-delà, une licence est requise.</p>
+<p>NesFactura fonctionne en mode <strong>essai gratuit</strong> (5 documents tous types confondus). Au-delà, une licence est requise.</p>
 <h4>Types de licence</h4>
 <ul>
 <li><strong>Abonnement annuel</strong> — documents illimités pour un exercice fiscal. À renouveler chaque année.</li>
@@ -8554,7 +8944,7 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <a href="https://nesmodels.fr/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
 
 <h4>Données de démonstration</h4>
-<p>Au premier lancement, Factura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
+<p>Au premier lancement, NesFactura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
   },,
   {
     icon:'\u2139', title:'Version & historique',
@@ -8583,6 +8973,56 @@ Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre apparei
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
 
+<h4>1.9.0 &mdash; 2 septembre 2026</h4>
+<p><strong>Changement de nom</strong></p>
+<ul>
+<li>Le produit s'appelle d\u00e9sormais <strong>NesFactura</strong> partout : application,
+site de vente, documents export\u00e9s et documentation</li>
+<li>Vos donn\u00e9es et vos cl\u00e9s de licence ne sont pas affect\u00e9es : les identifiants
+techniques internes restent inchang\u00e9s</li>
+<li>La page de vente est accessible \u00e0 l'adresse nesfactura.html</li>
+</ul>
+
+<h4>1.8.1 &mdash; 2 septembre 2026</h4>
+<p><strong>Site de vente</strong></p>
+<ul>
+<li>La page de vente est adapt\u00e9e \u00e0 la lecture sur t\u00e9l\u00e9phone</li>
+<li>Une barre sup\u00e9rieure permanente donne acc\u00e8s au formulaire de commande depuis
+n'importe quel endroit de la page</li>
+<li>Nouvelle rubrique \u00ab L'application en images \u00bb : carrousel des dix \u00e9crans principaux</li>
+<li>R\u00e9f\u00e9rencement : titre, description, donn\u00e9es structur\u00e9es et contenu enrichi
+sur la facturation, les auto-entrepreneurs et les obligations r\u00e9glementaires</li>
+</ul>
+<p>L'application elle-m\u00eame est inchang\u00e9e depuis la version 1.8.0.</p>
+
+<h4>1.8.0 &mdash; 2 septembre 2026</h4>
+<p><strong>Interface mobile</strong></p>
+<ul>
+<li>La barre d'onglets du bas est supprim\u00e9e : la navigation passe enti\u00e8rement par
+le menu escamotable, ce qui lib\u00e8re de la hauteur d'\u00e9cran</li>
+<li>Un message d'accueil pr\u00e9sente l'application au premier lancement et indique
+o\u00f9 se trouve le bouton d'ouverture du menu. Il peut \u00eatre d\u00e9sactiv\u00e9 d'une case \u00e0 cocher</li>
+<li>Chaque page de statistiques n'affiche plus qu'un graphique, choisi pour rester
+lisible sur un \u00e9cran \u00e9troit, avec un acc\u00e8s direct \u00e0 l'export complet</li>
+<li>Les cartes de documents permettent d\u00e9sormais d'avancer et de revenir en arri\u00e8re
+dans le cycle devis \u2192 commande \u2192 livraison \u2192 facture</li>
+<li>Tableau du bilan : colonne des libell\u00e9s resserr\u00e9e, environ cinq mois visibles
+sans faire d\u00e9filer</li>
+</ul>
+<p><strong>Corrections</strong></p>
+<ul>
+<li>Les graphiques d\u00e9bordaient de l'\u00e9cran : le dernier mois \u00e9tait syst\u00e9matiquement
+tronqu\u00e9. Les dimensions s'ajustent maintenant \u00e0 la largeur disponible</li>
+<li>Un mois sans document dispara\u00eessait de l'axe, ce qui rapprochait artificiellement
+deux p\u00e9riodes \u00e9loign\u00e9es. L'axe est d\u00e9sormais continu</li>
+<li>Suppression et transformation d'un document restaient sans effet sur certains
+navigateurs mobiles</li>
+<li>Les listes de documents ne s'affichaient pas sur t\u00e9l\u00e9phone</li>
+<li>L'export des statistiques \u00e9chouait sur mobile ; le document est maintenant
+propos\u00e9 au t\u00e9l\u00e9chargement et la fen\u00eatre d'impression s'ouvre d'elle-m\u00eame</li>
+<li>L'export PDF des achats \u00e9tait incomplet</li>
+</ul>
+
 <h4>1.7.5 &mdash; 25 ao\u00fbt 2026</h4>
 <p><strong>Corrections</strong></p>
 <ul>
@@ -8596,8 +9036,8 @@ Les filtres, indicateurs, graphes et classements y figurent d\u00e9sormais</li>
 <p><strong>Publication</strong></p>
 <ul>
 <li>L'application est publi\u00e9e sous le nom <strong>NesFactura</strong> sur le Microsoft Store,
-le nom Factura n'y \u00e9tant pas disponible. L'interface, la documentation et le site
-conservent le nom Factura</li>
+le nom NesFactura n'y \u00e9tant pas disponible. L'interface, la documentation et le site
+conservent le nom NesFactura</li>
 </ul>
 
 <h4>1.7.3 &mdash; 25 ao\u00fbt 2026</h4>
@@ -8801,7 +9241,7 @@ document.querySelectorAll('.overlay').forEach(ov=>{
 (function setupPWA(){
 
   // ── 1. Manifest dynamique ──────────────────────────────────────────
-  const appName    = params.raison || 'Factura';
+  const appName    = params.raison || 'NesFactura';
   const themeColor = params.accentColor || '#B8963E';
   const manifest = {
     name: appName + ' — Gestion Commerciale',
@@ -8970,7 +9410,7 @@ document.querySelectorAll('.overlay').forEach(ov=>{
       modal.id='modal-install-guide';
       modal.className='overlay';
       modal.innerHTML=`<div class="modal" style="max-width:480px">
-        <div class="modal-title">📲 Installer Factura</div>
+        <div class="modal-title">📲 Installer NesFactura</div>
         <div id="install-guide-steps"></div>
         <div class="modal-footer">
           <button class="btn btn-primary" onclick="closeModal('modal-install-guide')">Fermer</button>
@@ -9303,9 +9743,9 @@ function showTrialBlocked(reason){
       <h2 style="font-size:20px;font-weight:700;color:var(--ink);margin-bottom:10px">${title}</h2>
       <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:24px">${msg}</p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="https://nesmodels.fr/factura.html" target="_blank"
+        <a href="https://nesmodels.fr/nesfactura.html" target="_blank"
            style="display:block;background:var(--gold);color:#fff;padding:14px;border-radius:var(--r8);font-weight:700;font-size:15px;text-decoration:none">
-          🛒 ${reason==='annual-expired'?'Renouveler ma licence':'Acheter la licence Factura'}
+          🛒 ${reason==='annual-expired'?'Renouveler ma licence':'Acheter la licence NesFactura'}
         </a>
         <button onclick="document.getElementById('trial-blocked-overlay').remove();go('parametres');setTimeout(()=>document.getElementById('license-section')?.scrollIntoView({behavior:'smooth'}),200)"
            style="background:var(--ivory2);border:1px solid var(--ivory3);color:var(--ink2);padding:12px;border-radius:var(--r8);font-size:13px;cursor:pointer;font-weight:500">
@@ -9354,7 +9794,7 @@ async function activateLicense(){
     localStorage.setItem(LS_LICENSE, JSON.stringify(licenseData));
     updateTrialUI();
     const typeLabel=result.type==='lifetime'
-      ?'Licence à vie activée — Bienvenue dans Factura !'
+      ?'Licence à vie activée — Bienvenue dans NesFactura !'
       :`Abonnement ${result.year} activé — Documents de l'exercice ${result.year} illimités !`;
     notify('✅ '+typeLabel);
     document.getElementById('trial-blocked-overlay')?.remove();
@@ -9417,6 +9857,8 @@ async function initApp(){
   if(ki&&ld.key)ki.value=ld.key;
   const isFirstRun=!localStorage.getItem(LS.params)&&invoices.length===0&&articles.length===0;
   if(isFirstRun){showWelcomeScreen();}else{go('articles');}
+  // Message d'accueil mobile, après l'affichage de l'écran initial
+  setTimeout(maybeShowWelcome,400);
 }
 initApp().catch(e=>{
   console.error('[initApp]',e);

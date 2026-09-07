@@ -6048,6 +6048,31 @@ function inRange(dateStr,range){
   if(!range)return true;
   return dateStr>=range.from && dateStr<=range.to;
 }
+// ══════════════════════════════════════════════════════════
+//  REMBOURSEMENTS ET STATISTIQUES
+//  Le remboursement est saisi en TTC sur l'ensemble du document
+//  (geste commercial global). Pour que le chiffre d'affaires
+//  reflète ce qui a réellement été encaissé, on le convertit en
+//  HT et on le répartit au prorata sur les lignes : les totaux
+//  comme les classements par article restent cohérents entre eux.
+//  Les documents d'origine ne sont jamais modifiés.
+// ══════════════════════════════════════════════════════════
+function applyRefund(inv, lines){
+  const remb=+inv.remb||0;
+  if(remb<=0 || !Array.isArray(lines) || !lines.length) return lines;
+
+  const brutHT=invHT(lines);
+  if(brutHT<=0) return lines;
+
+  // Le remboursement est TTC : le ramener à une valeur hors taxes
+  const tva=+inv.tva||0;
+  const rembHT=remb/(1+tva/100);
+
+  // Un remboursement supérieur au montant facturé annule le chiffre d'affaires
+  const ratio=Math.max(0,(brutHT-rembHT)/brutHT);
+  return lines.map(l=>({...l, price:(+l.price||0)*ratio}));
+}
+
 function filteredLinesOf(inv){
   const ttId=+(document.getElementById('st-tagtype')||{}).value||0;
   const tvId=+(document.getElementById('st-tagval')||{}).value||0;
@@ -6089,7 +6114,7 @@ function getFilteredInvoices(type){
   return invoices
     .filter(i=>i.type===type && (i.docType||'facture')==='facture' && inRange(i.date,range) && (!platFilter || (i.platform||'')=== platFilter))
     .map(i=>{
-      const lines=filteredLinesOf(i);
+      const lines=applyRefund(i, filteredLinesOf(i));
       return lines.length ? {...i,lines} : null;
     })
     .filter(Boolean);
@@ -6925,6 +6950,7 @@ function importEbay(text){
   // Grouper les Commandes par numéro
   const orderRows={}; // orderId => {summaryRow, itemRows[]}
   const feeRows=[]; // Autres frais
+  const refundRows=[]; // Remboursements rattachés à une commande
   const toSkip=new Set(['Versement']);
   const shippingPurchaseRows=[]; // Bordereau d'affranchissement → factures d'achat port
 
@@ -6939,10 +6965,10 @@ function importEbay(text){
   ];
 
   function getOrCreateFeeArt(label){
-    const ref='FEE_EBAY_'+label.toUpperCase().replace(/[^A-Z0-9]/g,'_').slice(0,30);
+    const {label:feeLabel,ref}=classifyEbayFee(label);
     let a=articles.find(x=>x.ref===ref);
     if(!a){
-      a={id:seq.art++,ref,name:label+' eBay',price:0,unit:'forfait',desc:'Commission/frais eBay',
+      a={id:seq.art++,ref,name:feeLabel,price:0,unit:'forfait',desc:'Commission/frais eBay',
          tagValues:{},photo:'',platformRefs:[],nomenclature:[],cost:0,costMode:'manual'};
       articles.push(a);
     }
@@ -6963,11 +6989,26 @@ function importEbay(text){
       const hasSub=parseMoney(row[COL.subtotal])>0||row[COL.itemId]&&row[COL.itemId]!=='--';
       if(hasSub)orderRows[oid].itemRows.push(row);
       else orderRows[oid].summaryRow=row;
+    } else if(type==='Remboursement' && (row[COL.order]||'').trim()){
+      // Un remboursement client n'est pas une charge : il réduit le produit
+      // de la vente concernée. On le met de côté pour l'imputer à sa facture.
+      refundRows.push(row);
     } else if(type==='Autres frais'||type==='Remboursement'){
       feeRows.push(row);
     }
   });
+  // Montant remboursé par commande : reporté sur la facture de vente
+  // correspondante plutôt que compté comme une charge.
+  const refundByOrder={};
+  refundRows.forEach(row=>{
+    const oid=(row[COL.order]||'').trim();
+    if(!oid)return;
+    const net=parseMoney(row[COL.net]);
+    if(net>=0)return;
+    refundByOrder[oid]=(refundByOrder[oid]||0)+Math.abs(net);
+  });
   let newSales=0,newFees=0,newShipPurch=0,dupesSales=0,dupesFees=0,dupesShip=0,newArts=0;
+  let newRefunds=0;
   const artsBefore=articles.length;
   // ── Factures de vente (Commandes) ──
   // Trier par date croissante pour que les n° de factures soient chronologiques
@@ -6997,7 +7038,8 @@ function importEbay(text){
       return lineSet;
     }).flat();
     const invNum=allocNum('vente');
-    invoices.push({id:nextId(),type:'vente',tier:buyerName,tierAddr:`${refRow[COL.buyerCity]||''} ${refRow[COL.buyerZip]||''} ${refRow[COL.buyerCountry]||''}`.trim(),num:invNum,date:dateStr,ech:addDays(dateStr,30),tva:0,status:params.defaultStatus||'brouillon',notes:'',platform:'Ebay',platRef:orderId,remb:0,lines,importRef:dedupeKey});
+    invoices.push({id:nextId(),type:'vente',tier:buyerName,tierAddr:`${refRow[COL.buyerCity]||''} ${refRow[COL.buyerZip]||''} ${refRow[COL.buyerCountry]||''}`.trim(),num:invNum,date:dateStr,ech:addDays(dateStr,30),tva:0,status:params.defaultStatus||'brouillon',notes:'',platform:'Ebay',platRef:orderId,remb:refundByOrder[orderId]||0,lines,importRef:dedupeKey});
+    if(refundByOrder[orderId])newRefunds++;
     importedRefsSet.add(dedupeKey);
     newSales++;
   });
@@ -7036,7 +7078,14 @@ function importEbay(text){
     feesByMonth[mkey].push({row,net,dedupeKey,d});
   });
   Object.entries(feesByMonth).sort().forEach(([mkey,entries])=>{
-    const lines=entries.map(({row,net})=>({aid:null,ref:'',name:(row[COL.desc]||'Frais eBay').trim(),platRef:row[COL.refNum]||'',qty:1,price:Math.abs(net),remise:0}));
+    // Chaque frais divers est rattaché à un article dédié : sans cela il
+    // pesait dans le total des achats sans apparaître dans les classements.
+    const lines=entries.map(({row,net})=>{
+      const brut=(row[COL.desc]||'Frais eBay').trim();
+      const art=getOrCreateFeeArt(brut);
+      return {aid:art?art.id:null,ref:art?art.ref:'',name:art?art.name:brut,
+              platRef:row[COL.refNum]||'',qty:1,price:Math.abs(net),remise:0};
+    });
     const firstDate=entries[0].d;
     const feeNum=allocNum('achat');
     invoices.push({id:nextId(),type:'achat',tier:'eBay',tierAddr:'',num:feeNum,date:firstDate,ech:firstDate,tva:0,status:params.defaultStatus||'brouillon',notes:`Frais eBay ${mkey}`,platform:'Ebay',remb:0,lines,importRef:'ebay-fees-'+mkey});
@@ -7104,7 +7153,7 @@ function importEbay(text){
     newShipPurch++;
   });
 
-  logImport(`✅ ${newSales} vente(s), ${newFees} facture(s) frais eBay, ${newShipPurch} facture(s) achat port+commissions, ${newArts} article(s) créé(s).`,'ok');
+  logImport(`✅ ${newSales} vente(s)${newRefunds?` dont ${newRefunds} avec remboursement`:''}, ${newFees} facture(s) frais eBay, ${newShipPurch} facture(s) achat port+commissions, ${newArts} article(s) créé(s).`,'ok');
   if(dupesSales+dupesFees+dupesShip>0)logImport(`ℹ ${dupesSales+dupesFees+dupesShip} ligne(s) ignorée(s) car déjà importée(s).`);
 }
 
@@ -7205,6 +7254,36 @@ function parseEtsyStatementDate(str){
 function parseEtsyStatementAmount(str){
   if(!str||str==='--')return 0;
   return parseFloat(str.replace(/[€\s,\u00a0\u202f]/g,'').replace(/[\u2212\u2014]/g,'-'))||0;
+}
+
+// Classement des frais eBay sur le modèle de celui des frais Etsy.
+// Sans cette table, la référence était fabriquée à partir du libellé brut :
+// les accents devenaient des soulignés et le nom était coupé en plein mot
+// (FEE_EBAY_FRAIS_EXPLOITATION_R_GLEMENTAI).
+function classifyEbayFee(titre){
+  const t=(titre||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(/commission.*prix final.*variable/i.test(t))
+    return {label:'Commission prix final (variable) eBay',ref:'FEE_EBAY_COMMISSION_VAR'};
+  if(/commission.*prix final.*fixe/i.test(t))
+    return {label:'Commission prix final (fixe) eBay',ref:'FEE_EBAY_COMMISSION_FIXE'};
+  if(/commission.*prix final|frais de vente/i.test(t))
+    return {label:'Commission de vente eBay',ref:'FEE_EBAY_COMMISSION'};
+  if(/reglementaire|exploitation/i.test(t))
+    return {label:'Frais exploitation réglementaires eBay',ref:'FEE_EBAY_REGLEMENTAIRE'};
+  if(/international/i.test(t))
+    return {label:'Frais transactions internationales eBay',ref:'FEE_EBAY_INTERNATIONAL'};
+  if(/insertion|mise en vente/i.test(t))
+    return {label:'Frais d\'insertion eBay',ref:'FEE_EBAY_INSERTION'};
+  if(/boutique|abonnement/i.test(t))
+    return {label:'Abonnement boutique eBay',ref:'FEE_EBAY_BOUTIQUE'};
+  if(/promotion|annonce sponsoris|publicit/i.test(t))
+    return {label:'Frais de promotion eBay',ref:'FEE_EBAY_PROMOTION'};
+  if(/remboursement/i.test(t))
+    return {label:'Remboursement eBay',ref:'FEE_EBAY_REMBOURSEMENT'};
+  // Repli : référence lisible construite sur les premiers mots du libellé
+  const court=t.toUpperCase().replace(/[^A-Z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,24);
+  return {label:(titre||'Frais eBay').trim().slice(0,60),
+          ref:'FEE_EBAY_'+(court||'DIVERS')};
 }
 
 function classifyEtsyFee(titre){
@@ -7984,8 +8063,10 @@ function renderBilan(){
   populateSbYears();
   const year=document.getElementById('sb-year')?.value||String(new Date().getFullYear());
   const MONTHS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-  const invV=invoices.filter(i=>i.type==='vente'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year);
-  const invA=invoices.filter(i=>i.type==='achat'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year);
+  const invV=invoices.filter(i=>i.type==='vente'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year)
+    .map(i=>({...i, lines:applyRefund(i, i.lines)}));
+  const invA=invoices.filter(i=>i.type==='achat'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year)
+    .map(i=>({...i, lines:applyRefund(i, i.lines)}));
   const caVbyM=Array.from({length:12},(_,i)=>invV.filter(inv=>monthKey(inv.date)===year+'-'+String(i+1).padStart(2,'0')).reduce((s,inv)=>s+invHT(inv.lines),0));
   const caAbyM=Array.from({length:12},(_,i)=>invA.filter(inv=>monthKey(inv.date)===year+'-'+String(i+1).padStart(2,'0')).reduce((s,inv)=>s+invHT(inv.lines),0));
   const bData=getBudgetData()[year]||{recettes:[],depenses:[]};
@@ -8241,8 +8322,10 @@ function renderSbTable(months,year,caVbyM,structRecM,totRecM,caAbyM,structDepM,t
 function buildBilanTableForPdf(year){
   const MONTHS=['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
   const bData=getBudgetData()[year]||{recettes:[],depenses:[]};
-  const invV=invoices.filter(i=>i.type==='vente'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year);
-  const invA=invoices.filter(i=>i.type==='achat'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year);
+  const invV=invoices.filter(i=>i.type==='vente'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year)
+    .map(i=>({...i, lines:applyRefund(i, i.lines)}));
+  const invA=invoices.filter(i=>i.type==='achat'&&(i.docType||'facture')==='facture'&&(i.date||'').slice(0,4)===year)
+    .map(i=>({...i, lines:applyRefund(i, i.lines)}));
   const caVbyM=Array.from({length:12},(_,mi)=>invV.filter(inv=>monthKey(inv.date)===year+'-'+String(mi+1).padStart(2,'0')).reduce((s,inv)=>s+invHT(inv.lines),0));
   const caAbyM=Array.from({length:12},(_,mi)=>invA.filter(inv=>monthKey(inv.date)===year+'-'+String(mi+1).padStart(2,'0')).reduce((s,inv)=>s+invHT(inv.lines),0));
   const structRecM=Array.from({length:12},(_,mi)=>bData.recettes.reduce((s,r)=>s+getBudgetCellValue(r,mi+1),0));
@@ -9126,6 +9209,20 @@ migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
 
 <h4>1.10.0 &mdash; 2 septembre 2026</h4>
+<p><strong>Fiabilit\u00e9 des chiffres</strong></p>
+<ul>
+<li>Les <strong>remboursements</strong> saisis sur une facture sont d\u00e9sormais d\u00e9duits du
+chiffre d'affaires dans les statistiques, la marge et le bilan. Le montant, saisi TTC, est
+converti hors taxes et r\u00e9parti sur les lignes : les totaux et les classements par article
+restent coh\u00e9rents. Les documents eux-m\u00eames continuent d'afficher le montant factur\u00e9</li>
+<li><strong>Import eBay</strong> : un remboursement client \u00e9tait enregistr\u00e9 comme une charge.
+Il est maintenant report\u00e9 sur la facture de vente correspondante, ce qui r\u00e9duit le produit
+au lieu d'augmenter les d\u00e9penses</li>
+<li><strong>Import eBay</strong> : les frais d'insertion n'\u00e9taient rattach\u00e9s \u00e0 aucun article
+et n'apparaissaient pas dans les r\u00e9partitions par nature</li>
+<li><strong>Import eBay</strong> : les r\u00e9f\u00e9rences des frais sont normalis\u00e9es et lisibles
+(commission variable, commission fixe, frais r\u00e9glementaires, insertion\u2026)</li>
+</ul>
 <p><strong>Bilan financier</strong></p>
 <ul>
 <li>Nouveau graphique <strong>Point mort</strong> : les produits et les charges cumul\u00e9s

@@ -976,6 +976,13 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 }
 .pm-ok{background:#EBF5EE;border-left:3px solid var(--green);color:#1C4332;}
 .pm-deficit{background:#FEF3C7;border-left:3px solid var(--amber);color:#78350F;}
+
+/* Rubrique de présentation dans la documentation */
+.doc-lead{
+  font-size:15px;line-height:1.7;color:var(--ink);
+  padding-bottom:14px;margin-bottom:4px;
+  border-bottom:1px solid var(--ivory3);
+}
 </style>
 </head>
 <body>
@@ -2758,7 +2765,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.10.0';
+const APP_VERSION = '1.10.1';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -8926,6 +8933,45 @@ function renderSmComparaison(caV,caA,marge,txMarge){
 // ════════════════════════════════════════
 const DOC_SECTIONS = [
   {
+    icon:'\u2b50', title:'Pr\u00e9sentation',
+    content:`
+<p class="doc-lead">NesFactura est un logiciel de gestion commerciale pour
+<strong>auto-entrepreneurs, micro-entreprises et TPE</strong>.</p>
+
+<h4>Une facturation conforme, sans y penser</h4>
+<p>Facturer n'est pas optionnel. Chaque vente \u00e0 un professionnel exige une facture conforme,
+num\u00e9rot\u00e9e sans rupture, conserv\u00e9e dix ans. Les mentions obligatoires sont nombreuses et
+leur absence expose \u00e0 des sanctions.</p>
+<p>NesFactura s'en charge. Vos factures portent d'office l'ensemble des mentions exig\u00e9es :
+identit\u00e9 des parties, num\u00e9rotation continue, dates, d\u00e9tail des lignes, totaux, SIRET,
+p\u00e9nalit\u00e9s de retard et indemnit\u00e9 de recouvrement. Un contr\u00f4le vous alerte si l'une
+d'elles manque. La mention de franchise en base de TVA s'ajoute seule si vous n'y \u00eates
+pas assujetti.</p>
+
+<h4>Le cycle documentaire complet</h4>
+<p>Devis, commande, bon de livraison, facture. Chaque document se transforme en le suivant
+d'un clic, et l'\u00e9tape pr\u00e9c\u00e9dente est archiv\u00e9e en pi\u00e8ce jointe. Vous suivez ce qui est
+envoy\u00e9, accept\u00e9, livr\u00e9, pay\u00e9.</p>
+
+<h4>Le pilotage de votre activit\u00e9</h4>
+<p>Catalogue avec co\u00fbts de revient et marges. Statistiques par mois, par client, par article,
+par canal de vente. Bilan financier avec le <strong>point mort</strong>, qui montre \u00e0 partir
+de quand votre exercice devient rentable.</p>
+
+<h4>Vos donn\u00e9es restent chez vous</h4>
+<p>Pas de cloud, pas de compte \u00e0 cr\u00e9er, aucune connexion bancaire. Le logiciel fonctionne
+int\u00e9gralement hors ligne et vous exportez vos sauvegardes o\u00f9 vous le souhaitez.
+Personne d'autre n'y acc\u00e8de.</p>
+
+<h4>Vendeur sur eBay ou Etsy&nbsp;?</h4>
+<p>D\u00e9posez votre fichier d'export : factures, commissions et frais de port sont reconstruits
+automatiquement, les articles inconnus cr\u00e9\u00e9s, les commandes d\u00e9j\u00e0 import\u00e9es ignor\u00e9es.</p>
+
+<p class="doc-note">Pas d'abonnement obligatoire : la licence vous appartient. La version
+d'essai n'est brid\u00e9e sur aucune fonctionnalit\u00e9 \u2014 seul le nombre de documents est limit\u00e9.</p>
+`
+  },
+  {
     icon:'📦', title:'Catalogue articles',
     content:`
 <p>Le catalogue centralise tous vos articles, produits et services. Chaque article peut être réutilisé sur tous vos documents.</p>
@@ -9180,7 +9226,7 @@ sert qu'à vérifier les mises à jour.</p>
 
 <h4>Données de démonstration</h4>
 <p>Au premier lancement, NesFactura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
-  },,
+  },
   {
     icon:'\u2139', title:'Version & historique',
     content:`
@@ -9207,6 +9253,16 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.10.1 &mdash; 2 septembre 2026</h4>
+<p><strong>Documentation</strong></p>
+<ul>
+<li>Nouvelle rubrique <strong>Pr\u00e9sentation</strong> en t\u00eate du guide : ce que fait
+l'application, les obligations de facturation qu'elle prend en charge, le cycle
+documentaire, le pilotage de l'activit\u00e9 et la ma\u00eetrise de vos donn\u00e9es</li>
+<li>Une entr\u00e9e vide figurait dans le sommaire entre \u00ab Donn\u00e9es &amp; Sauvegarde \u00bb
+et \u00ab Version &amp; historique \u00bb</li>
+</ul>
 
 <h4>1.10.0 &mdash; 2 septembre 2026</h4>
 <p><strong>Fiabilit\u00e9 des chiffres</strong></p>

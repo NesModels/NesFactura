@@ -983,6 +983,16 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   padding-bottom:14px;margin-bottom:4px;
   border-bottom:1px solid var(--ivory3);
 }
+
+/* Alerte de saturation du stockage */
+.storage-alert{
+  position:fixed;left:0;right:0;bottom:0;z-index:900;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:14px 20px;background:#7F1D1D;color:#fff;
+  font-size:13.5px;line-height:1.5;
+  box-shadow:0 -2px 16px rgba(0,0,0,.3);
+}
+.storage-alert .btn{background:#fff;color:#7F1D1D;border:none;font-weight:600;}
 </style>
 </head>
 <body>
@@ -2641,7 +2651,38 @@ const LS = {
 const LS_BUDGET='fa_budget';
 const LS_LICENSE='fa_license';
 function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}}
-function ss(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+// Une écriture refusée — stockage saturé le plus souvent — doit être
+// signalée : l'avaler en silence laisse l'utilisateur travailler sur des
+// données qui ne sont plus enregistrées.
+let _storageAlerted=false;
+function ss(k,v){
+  try{
+    localStorage.setItem(k,JSON.stringify(v));
+    return true;
+  }catch(e){
+    console.error('[stockage] échec sur',k,e);
+    if(!_storageAlerted){
+      _storageAlerted=true;
+      try{
+        notify('⚠️ Espace de stockage saturé — vos dernières modifications ne sont PAS enregistrées. Exportez une sauvegarde immédiatement (Données → Export).',false);
+      }catch(_){}
+      try{ showStorageAlert(); }catch(_){}
+    }
+    return false;
+  }
+}
+
+// Bandeau permanent tant que le problème n'est pas résolu
+function showStorageAlert(){
+  if(document.getElementById('storage-alert'))return;
+  const d=document.createElement('div');
+  d.id='storage-alert';
+  d.className='storage-alert';
+  d.innerHTML=`<strong>Stockage saturé.</strong> Vos modifications ne sont plus enregistrées.
+    <button class="btn btn-sm" onclick="exportAll()">Exporter une sauvegarde</button>
+    <button class="btn btn-sm" onclick="go('donnees')">Voir les données</button>`;
+  document.body.appendChild(d);
+}
 function ssRaw(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function lsRaw(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
 
@@ -2693,15 +2734,37 @@ articles.forEach(a=>{
 });
 // Réassocie à chaque article la photo conservée dans sa clé dédiée.
 // À appeler après tout chargement d'articles (démarrage, import de sauvegarde).
-function restorePhotos(){
+// Réassocie les photos aux articles après chargement.
+// Elles vivent désormais dans IndexedDB ; les clés fa_photo_<id> laissées
+// dans localStorage par les versions précédentes sont récupérées puis
+// libérées, ce qui désature le stockage local.
+async function restorePhotos(){
+  let photos={};
+  try{ photos=await idbGet('fa_photos',{}) || {}; }
+  catch(e){ console.error('[photos] lecture IDB',e); }
+
+  let recuperees=0;
   articles.forEach(a=>{
-    if(!a.photo){
-      try{const p=localStorage.getItem('fa_photo_'+a.id);if(p)a.photo=p;}catch(e){}
-    } else {
-      // Photo présente en ligne (ancienne sauvegarde) : la déporter dans sa clé
-      try{localStorage.setItem('fa_photo_'+a.id,a.photo);}catch(e){}
-    }
+    if(photos[a.id]){ a.photo=photos[a.id]; return; }
+    // Reprise depuis l'ancien emplacement
+    try{
+      const p=localStorage.getItem('fa_photo_'+a.id);
+      if(p){ a.photo=p; photos[a.id]=p; recuperees++; }
+    }catch(e){}
   });
+
+  if(recuperees){
+    try{
+      await idbSet('fa_photos',photos);
+      // La copie est faite : libérer les anciennes clés
+      articles.forEach(a=>{
+        try{ localStorage.removeItem('fa_photo_'+a.id); }catch(e){}
+      });
+      console.log('[photos] '+recuperees+' photo(s) déplacée(s) vers IndexedDB');
+    }catch(e){
+      console.error('[photos] migration impossible, anciennes clés conservées',e);
+    }
+  }
 }
 // Ancien système catégories (conservé pour import/export rétro-compat)
 let categories = ls(LS.cat,[]);
@@ -2765,7 +2828,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.10.1';
+const APP_VERSION = '1.11.0';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -2831,38 +2894,49 @@ let editArtTagValues={}, editArtPhoto='';
 // invoice forms
 const INV={vente:{lines:[],editId:null},achat:{lines:[],editId:null}};
 
+// Enregistrement de l'ensemble des données.
+// Renvoie une promesse : l'appelant peut attendre la fin réelle de
+// l'écriture avant d'en tirer des conséquences (voir la migration).
 function persist(){
-  // Données légères → localStorage (sync, instantané)
-  try{
-    ss(LS.cat,categories);
-    ss(LS.tagTypes,tagTypes);
-    ss(LS.tiers,tiers);
-    ss(LS.seq,seq);
-    ss(LS.params,params);
-  }catch(e){console.error('[persist/ls]',e);}
+  // Données légères → localStorage
+  ss(LS.cat,categories);
+  ss(LS.tagTypes,tagTypes);
+  ss(LS.tiers,tiers);
+  ss(LS.seq,seq);
+  ss(LS.params,params);
 
-  // Photos articles → localStorage clés séparées
+  // Les photos vont dans IndexedDB, pas dans localStorage.
+  // localStorage est plafonné à environ 5 Mo : quelques photos suffisaient
+  // à le saturer, et les écritures suivantes — articles, factures —
+  // échouaient alors en silence.
+  const photos={};
   const artsClean=articles.map(a=>{
-    if(a.photo){
-      try{localStorage.setItem('fa_photo_'+a.id,a.photo);}
-      catch(e){console.warn('[persist] photo ignorée:',a.id);}
-    }
+    if(a.photo)photos[a.id]=a.photo;
     return {...a,photo:''};
   });
 
-  // Données volumineuses → IndexedDB (async, illimité)
-  idbSet(LS.art, artsClean)
-    .catch(e=>{console.error('[idb] art:',e);notify('⚠️ Erreur sauvegarde articles',false);});
-  idbSet(LS.inv, invoices)
-    .catch(e=>{console.error('[idb] inv:',e);notify('🚨 Erreur sauvegarde factures !',false);});
-  idbSet(LS.importedRefs, [...importedRefsSet])
-    .catch(e=>{console.error('[idb] refs:',e);});
-
-  // Indicateur visuel
   const dot=document.getElementById('save-dot');
   const lbl=document.getElementById('save-label');
-  if(dot)dot.style.background='#2D6A4F';
-  if(lbl)lbl.textContent='Sauvegardé '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+  if(dot)dot.style.background='#B8963E';
+  if(lbl)lbl.textContent='Enregistrement…';
+
+  return Promise.all([
+    idbSet(LS.art, artsClean),
+    idbSet(LS.inv, invoices),
+    idbSet(LS.importedRefs, [...importedRefsSet]),
+    idbSet('fa_photos', photos),
+  ]).then(()=>{
+    if(dot)dot.style.background='#2D6A4F';
+    if(lbl)lbl.textContent='Sauvegardé '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return true;
+  }).catch(e=>{
+    console.error('[persist]',e);
+    if(dot)dot.style.background='#DC2626';
+    if(lbl)lbl.textContent='Échec de sauvegarde';
+    notify('🚨 Vos données n\'ont pas pu être enregistrées. Exportez une sauvegarde immédiatement (Données → Export).',false);
+    try{ showStorageAlert(); }catch(_){}
+    throw e;
+  });
 }
 
 // ════════════════════════════════════════
@@ -5269,7 +5343,7 @@ async function importAll(input){
   if(!input.files||!input.files[0])return;
   if(!await askConfirm('Importer ce fichier ?\n\nToutes les données actuelles seront remplacées.',{title:'Importer une sauvegarde',okLabel:'Importer',danger:true}))return;
   const r=new FileReader();
-  r.onload=e=>{
+  r.onload=async e=>{
     try{
       const data=JSON.parse(e.target.result);
       articles=data.articles||[];
@@ -5277,9 +5351,8 @@ async function importAll(input){
       tiers=data.tiers||[];
       // Migration unique centralisée
       runMigrations({articles, invoices, tiers});
-      // Les photos arrivent en clair dans la sauvegarde : les déporter
-      // dans leurs clés dédiées pour rester cohérent avec persist()
-      restorePhotos();
+      // Les photos arrivent en clair dans la sauvegarde : elles restent
+      // sur les articles, persist() les déposera dans IndexedDB.
       categories=data.categories||[];
       tagTypes=data.tagTypes||[];
       params={...params,...(data.params||{})};
@@ -5306,12 +5379,9 @@ async function importAll(input){
       if(data.budget&&typeof data.budget==='object'){
         try{localStorage.setItem(LS_BUDGET,JSON.stringify(data.budget));}catch(e){}
       }
-      // Restaurer les photos
-      articles.forEach(a=>{
-        if(a.photo){try{localStorage.setItem('fa_photo_'+a.id,a.photo);}catch(e){}}
-        else{try{const p=localStorage.getItem('fa_photo_'+a.id);if(p)a.photo=p;}catch(e){}}
-      });
-      persist();
+      // Les photos de la sauvegarde sont conservées sur les articles :
+      // persist() les déposera dans IndexedDB avec le reste.
+      await persist();
       updateNavBrand();
       refreshPalette();
       updateTrialUI();
@@ -9254,6 +9324,25 @@ Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre apparei
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
 
+<h4>1.11.0 &mdash; 9 septembre 2026</h4>
+<p><strong>Correctif majeur \u2014 s\u00e9curit\u00e9 des donn\u00e9es</strong></p>
+<p>Une saturation du stockage local pouvait faire perdre articles et factures
+sans aucun avertissement. Trois corrections y rem\u00e9dient.</p>
+<ul>
+<li>Les <strong>photos d'articles</strong> sont d\u00e9sormais enregistr\u00e9es dans la base
+interne du navigateur, et non plus dans le stockage local limit\u00e9 \u00e0 5&nbsp;Mo.
+Quelques photos suffisaient \u00e0 le saturer, apr\u00e8s quoi plus rien ne s'enregistrait.
+Les photos existantes sont d\u00e9plac\u00e9es automatiquement au premier lancement</li>
+<li>Une <strong>\u00e9criture refus\u00e9e est maintenant signal\u00e9e</strong> : message d'alerte et
+bandeau permanent invitant \u00e0 exporter une sauvegarde. Jusqu'ici l'erreur \u00e9tait
+ignor\u00e9e et l'utilisateur continuait de travailler sur des donn\u00e9es non enregistr\u00e9es</li>
+<li>La <strong>migration vers la base interne</strong> ne supprime plus les donn\u00e9es d'origine
+sans avoir relu la destination et v\u00e9rifi\u00e9 qu'elle contient bien le m\u00eame nombre
+d'articles et de factures</li>
+</ul>
+<p class="doc-note">Exportez une sauvegarde r\u00e9guli\u00e8rement, depuis Donn\u00e9es \u2192 Export.
+C'est la seule protection contre une perte accidentelle.</p>
+
 <h4>1.10.1 &mdash; 2 septembre 2026</h4>
 <p><strong>Documentation</strong></p>
 <ul>
@@ -10166,16 +10255,36 @@ async function initApp(){
 
   // Les photos sont stockées à part (clés fa_photo_<id>) pour alléger le JSON
   // des articles. Il faut donc les réassocier une fois les articles chargés.
-  restorePhotos();
+  await restorePhotos();
 
-  // Si migration depuis localStorage, sauvegarder dans IDB et nettoyer
+  // Migration depuis localStorage vers IndexedDB.
+  // La source n'est effacée qu'après avoir relu la destination et constaté
+  // qu'elle contient bien les données : une écriture peut échouer, et
+  // supprimer l'original sur la seule foi d'un appel réussi fait perdre
+  // définitivement le travail de l'utilisateur.
   if(idbArts===null||idbInvs===null){
-    persist();
-    setTimeout(()=>{
-      try{localStorage.removeItem(LS.inv);}catch(e){}
-      try{localStorage.removeItem(LS.art);}catch(e){}
-      try{localStorage.removeItem(LS.importedRefs);}catch(e){}
-    },2000);
+    const attArts=articles.length, attInvs=invoices.length;
+    try{
+      await persist();
+      const [relArts,relInvs]=await Promise.all([
+        idbGet(LS.art,null), idbGet(LS.inv,null),
+      ]);
+      const ok = Array.isArray(relArts) && Array.isArray(relInvs)
+              && relArts.length===attArts && relInvs.length===attInvs;
+      if(ok){
+        // La copie est vérifiée : on peut libérer le stockage local
+        try{localStorage.removeItem(LS.inv);}catch(e){}
+        try{localStorage.removeItem(LS.art);}catch(e){}
+        try{localStorage.removeItem(LS.importedRefs);}catch(e){}
+      } else {
+        console.error('[migration] copie incomplète — la source est conservée',
+          {attArts,attInvs,relArts:relArts&&relArts.length,relInvs:relInvs&&relInvs.length});
+        notify('⚠️ La migration des données n\'a pas pu être vérifiée. Rien n\'a été supprimé. Exportez une sauvegarde (Données → Export).',false);
+      }
+    }catch(e){
+      console.error('[migration] échec',e);
+      notify('⚠️ Échec de la migration des données. Vos données d\'origine sont conservées. Exportez une sauvegarde.',false);
+    }
   }
 
   refreshPalette();updateNavBrand();checkExportReminder();updateTrialUI();initNavSections();

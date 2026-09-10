@@ -993,6 +993,32 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   box-shadow:0 -2px 16px rgba(0,0,0,.3);
 }
 .storage-alert .btn{background:#fff;color:#7F1D1D;border:none;font-weight:600;}
+
+/* Instantanés automatiques */
+.snap-list{display:flex;flex-direction:column;gap:7px;}
+.snap-row{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:11px 14px;background:var(--ivory2);
+  border:1px solid var(--ivory3);border-radius:var(--r8);
+}
+.snap-info{display:flex;flex-direction:column;gap:3px;min-width:0;}
+.snap-info strong{font-size:13px;color:var(--ink);}
+.snap-info span{font-size:11.5px;color:var(--ink4);}
+.snap-list .empty{
+  padding:16px;text-align:center;font-size:12.5px;
+  color:var(--ink4);background:var(--ivory2);border-radius:var(--r8);
+}
+@media(max-width:600px){
+  .snap-row{flex-direction:column;align-items:stretch;gap:8px;}
+  .snap-row .btn{width:100%;justify-content:center;min-height:40px;}
+}
+
+/* État de protection du stockage */
+#storage-status{padding:14px 16px;border-radius:var(--r8);font-size:13px;line-height:1.65;}
+.stor-ok{background:#EBF5EE;border-left:3px solid var(--green);color:#1C4332;}
+.stor-warn{background:#FEF3C7;border-left:3px solid var(--amber);color:#78350F;}
+.stor-neutral{background:var(--ivory2);border-left:3px solid var(--ivory4);color:var(--ink3);}
+.stor-detail{font-size:11.5px;opacity:.85;}
 </style>
 </head>
 <body>
@@ -2260,6 +2286,29 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div><div class="page-title">Données &amp; portabilité</div><div class="page-sub">Exportez ou importez l'intégralité de votre base</div></div>
   </div>
   <div class="content">
+
+    <!-- ÉTAT DU STOCKAGE -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><span class="ct-icon">🛡</span> Protection de vos données</div>
+      <div id="storage-status" class="stor-neutral"></div>
+    </div>
+
+    <!-- INSTANTANÉS AUTOMATIQUES -->
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-title"><span class="ct-icon">🕘</span> Instantanés automatiques</div>
+      <p style="font-size:13px;color:var(--ink3);margin-bottom:14px;line-height:1.6">
+        L'application conserve elle-même vos huit derniers états, pris au démarrage et avant
+        chaque opération importante — import, restauration, réinitialisation.
+        <strong>Aucune action de votre part n'est nécessaire.</strong>
+        Ces copies restent sur votre appareil et ne remplacent pas une sauvegarde exportée,
+        qui seule vous protège d'une panne matérielle.
+      </p>
+      <div id="snap-list" class="snap-list"></div>
+      <button class="btn btn-sm" style="margin-top:12px" onclick="takeSnapshot('manuel',false).then(renderSnapshots)">
+        Prendre un instantané maintenant
+      </button>
+    </div>
+
     <div class="g2">
       <div class="card">
         <div class="card-title"><span class="ct-icon">⬇</span> Export complet</div>
@@ -2655,6 +2704,7 @@ function ls(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}c
 // signalée : l'avaler en silence laisse l'utilisateur travailler sur des
 // données qui ne sont plus enregistrées.
 let _storageAlerted=false;
+let _baseSuspecte=false;   // base vide alors qu'elle avait déjà servi
 function ss(k,v){
   try{
     localStorage.setItem(k,JSON.stringify(v));
@@ -2743,28 +2793,73 @@ async function restorePhotos(){
   try{ photos=await idbGet('fa_photos',{}) || {}; }
   catch(e){ console.error('[photos] lecture IDB',e); }
 
+  // Reprise de TOUTES les clés fa_photo_* restées dans le stockage local,
+  // y compris celles dont l'article n'existe plus : ce sont elles qui
+  // saturaient l'espace. On déplace sans trier, puis on libère.
+  let anciennes=[];
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('fa_photo_'))anciennes.push(k);
+    }
+  }catch(e){ console.error('[photos] parcours du stockage',e); }
+
   let recuperees=0;
-  articles.forEach(a=>{
-    if(photos[a.id]){ a.photo=photos[a.id]; return; }
-    // Reprise depuis l'ancien emplacement
+  anciennes.forEach(k=>{
+    const id=k.slice(9);
     try{
-      const p=localStorage.getItem('fa_photo_'+a.id);
-      if(p){ a.photo=p; photos[a.id]=p; recuperees++; }
+      const p=localStorage.getItem(k);
+      if(p&&!photos[id]){ photos[id]=p; recuperees++; }
     }catch(e){}
   });
 
   if(recuperees){
     try{
       await idbSet('fa_photos',photos);
-      // La copie est faite : libérer les anciennes clés
-      articles.forEach(a=>{
-        try{ localStorage.removeItem('fa_photo_'+a.id); }catch(e){}
-      });
-      console.log('[photos] '+recuperees+' photo(s) déplacée(s) vers IndexedDB');
+      // La copie est vérifiée par la relecture ci-dessous avant suppression
+      const relu=await idbGet('fa_photos',null);
+      const ok=relu&&Object.keys(relu).length>=Object.keys(photos).length;
+      if(ok){
+        anciennes.forEach(k=>{ try{ localStorage.removeItem(k); }catch(e){} });
+        console.log('[photos] '+recuperees+' photo(s) déplacée(s) vers IndexedDB, stockage local libéré');
+      }else{
+        console.error('[photos] copie non vérifiée — anciennes clés conservées');
+      }
     }catch(e){
       console.error('[photos] migration impossible, anciennes clés conservées',e);
     }
   }
+
+  // Réassocier aux articles chargés
+  articles.forEach(a=>{ if(photos[a.id])a.photo=photos[a.id]; });
+
+  // Purge des photos sans article. Une photo dont l'article a disparu
+  // occupe l'espace sans servir à rien : c'est ce qui laissait des clés
+  // résiduelles dans le stockage local après une perte de données.
+  try{
+    const vivants=new Set(articles.map(a=>String(a.id)));
+    const restantes=[];
+    for(let i=0;i<localStorage.length;i++){
+      const k=localStorage.key(i);
+      if(k&&k.startsWith('fa_photo_')&&!vivants.has(k.slice(9)))restantes.push(k);
+    }
+    if(restantes.length){
+      let libere=0;
+      restantes.forEach(k=>{
+        try{ libere+=(localStorage.getItem(k)||'').length; localStorage.removeItem(k); }catch(e){}
+      });
+      console.log('[photos] '+restantes.length+' orpheline(s) supprimée(s) du stockage local, '
+        +Math.round(libere/1024)+' Ko lib\u00e9r\u00e9s');
+    }
+    let modifie=false;
+    Object.keys(photos).forEach(id=>{
+      if(!vivants.has(String(id))){ delete photos[id]; modifie=true; }
+    });
+    if(modifie){
+      await idbSet('fa_photos',photos);
+      console.log('[photos] base interne nettoy\u00e9e des photos sans article');
+    }
+  }catch(e){ console.warn('[photos] purge partielle',e); }
 }
 // Ancien système catégories (conservé pour import/export rétro-compat)
 let categories = ls(LS.cat,[]);
@@ -2828,7 +2923,7 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.11.0';
+const APP_VERSION = '1.12.0';
 const APP_DATE    = '2026-08-25';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
@@ -2897,7 +2992,42 @@ const INV={vente:{lines:[],editId:null},achat:{lines:[],editId:null}};
 // Enregistrement de l'ensemble des données.
 // Renvoie une promesse : l'appelant peut attendre la fin réelle de
 // l'écriture avant d'en tirer des conséquences (voir la migration).
-function persist(){
+// Empêche l'écrasement d'une base garnie par un jeu vide.
+// C'est ce scénario qui a rendu une perte irréversible : l'application
+// lisait un stockage vidé, en concluait qu'il n'y avait rien, puis
+// enregistrait ce vide par-dessus les données restantes.
+let _lastCounts={art:0,inv:0};
+async function guardEmptyWrite(){
+  if(_baseSuspecte){
+    console.error('[protection] écriture bloquée : base jugée incohérente');
+    return false;
+  }
+  if(articles.length||invoices.length){
+    _lastCounts={art:articles.length,inv:invoices.length};
+    return true;
+  }
+  // On s'apprête à écrire un jeu vide : que contient la base ?
+  let dbArts=[],dbInvs=[];
+  try{
+    dbArts=await idbGet(LS.art,[])||[];
+    dbInvs=await idbGet(LS.inv,[])||[];
+  }catch(e){ return true; }   // base illisible : ne pas bloquer
+
+  if(dbArts.length||dbInvs.length){
+    console.error('[protection] écriture vide refusée — la base contient',
+      dbArts.length,'article(s) et',dbInvs.length,'facture(s)');
+    notify('⚠️ Enregistrement interrompu : l\'application allait remplacer '
+      +(dbArts.length+dbInvs.length)+' enregistrement(s) par une base vide. '
+      +'Vos données sont conservées. Rechargez la page.',false);
+    try{ showStorageAlert(); }catch(_){}
+    return false;
+  }
+  return true;
+}
+
+async function persist(){
+  if(!await guardEmptyWrite())return false;
+
   // Données légères → localStorage
   ss(LS.cat,categories);
   ss(LS.tagTypes,tagTypes);
@@ -4811,6 +4941,228 @@ function editInvoice(id,type){
   if(tEl)tEl.textContent=(DOC_TYPE_LABEL[dt]||'Document')+' de '+(type==='vente'?'vente':'achat')+' — Modification';
 }
 // ══════════════════════════════════════════════════════════
+//  RAPPEL DE SAUVEGARDE EXTERNE
+//  Les instantanés vivent dans le navigateur : ils protègent
+//  d'une fausse manipulation, pas d'un effacement du profil,
+//  d'une panne ni d'un vol. Le seul recours dans ces cas est
+//  un fichier déposé ailleurs — d'où ce rappel, insistant
+//  quand le stockage n'est pas protégé.
+// ══════════════════════════════════════════════════════════
+function joursDepuisExport(){
+  try{
+    const d=localStorage.getItem(LS.lastExport);
+    if(!d)return null;
+    return Math.floor((Date.now()-new Date(d).getTime())/86400000);
+  }catch(e){ return null; }
+}
+
+function checkBackupUrgency(){
+  if(!articles.length && !invoices.length)return;
+  const j=joursDepuisExport();
+  // Sans protection du stockage, le seuil d'alerte est bien plus bas
+  const seuil = _storagePersistent ? 14 : 3;
+
+  if(j===null){
+    notify('Aucune sauvegarde n\'a encore été exportée. Vos données ne sont pour l\'instant '
+      +'protégées que par ce navigateur — exportez un fichier depuis Données.',false);
+    return;
+  }
+  if(j>=seuil){
+    const msg = _storagePersistent
+      ? `Dernière sauvegarde exportée il y a ${j} jours. Pensez à en refaire une.`
+      : `Dernière sauvegarde il y a ${j} jours, et le stockage de ce navigateur n'est pas `
+        +`protégé : vos données peuvent être effacées sans préavis. Exportez maintenant.`;
+    notify(msg,false);
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  PERSISTANCE DU STOCKAGE
+//  Par défaut, un navigateur conserve les données d'un site
+//  « au mieux » : il peut les effacer sans prévenir quand
+//  l'espace disque manque. C'est la cause racine des pertes
+//  de données constatées.
+//
+//  navigator.storage.persist() demande un stockage protégé,
+//  que le navigateur n'évince plus automatiquement. Sur
+//  Chrome et Edge la réponse est décidée sans question posée
+//  à l'utilisateur ; Firefox l'interroge.
+// ══════════════════════════════════════════════════════════
+let _storagePersistent=null;   // null = inconnu
+
+async function ensurePersistentStorage(){
+  try{
+    if(!navigator.storage||!navigator.storage.persist){
+      _storagePersistent=false;
+      return false;
+    }
+    if(await navigator.storage.persisted()){
+      _storagePersistent=true;
+      return true;
+    }
+    _storagePersistent=await navigator.storage.persist();
+    console.log('[stockage] persistance',_storagePersistent?'accordée':'refusée');
+    return _storagePersistent;
+  }catch(e){
+    console.error('[stockage] demande de persistance',e);
+    _storagePersistent=false;
+    return false;
+  }
+}
+
+// Espace occupé et disponible, pour information
+async function storageEstimate(){
+  try{
+    if(!navigator.storage||!navigator.storage.estimate)return null;
+    const e=await navigator.storage.estimate();
+    return {
+      utilise:e.usage||0,
+      total:e.quota||0,
+      pourcent:e.quota?Math.round((e.usage/e.quota)*1000)/10:0,
+    };
+  }catch(e){ return null; }
+}
+
+async function renderStorageStatus(){
+  const el=document.getElementById('storage-status');
+  if(!el)return;
+  const est=await storageEstimate();
+  const mo=o=>o>=1073741824?(o/1073741824).toFixed(1)+' Go':Math.round(o/1048576)+' Mo';
+
+  if(_storagePersistent===true){
+    el.className='stor-ok';
+    el.innerHTML='<strong>✅ Stockage protégé.</strong> Le navigateur ne peut pas effacer '
+      +'vos données pour récupérer de l\'espace. Seule une suppression volontaire de votre '
+      +'part les retirerait.'
+      +(est?`<br><span class="stor-detail">${mo(est.utilise)} utilisés sur ${mo(est.total)} disponibles (${est.pourcent} %)</span>`:'');
+  } else if(_storagePersistent===false){
+    el.className='stor-warn';
+    el.innerHTML='<strong>⚠️ Stockage non protégé.</strong> Le navigateur s\'autorise à effacer '
+      +'vos données si l\'espace disque vient à manquer, sans vous prévenir. '
+      +'<strong>Exportez régulièrement une sauvegarde</strong> vers un autre support.'
+      +'<br><span class="stor-detail">Installer l\'application (icône d\'installation dans la barre '
+      +'d\'adresse) augmente fortement les chances d\'obtenir cette protection.</span>'
+      +(est?`<br><span class="stor-detail">${mo(est.utilise)} utilisés sur ${mo(est.total)} disponibles</span>`:'');
+  } else {
+    el.className='stor-neutral';
+    el.innerHTML='<span class="stor-detail">État du stockage en cours de vérification…</span>';
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  INSTANTANÉS AUTOMATIQUES
+//  L'application conserve elle-même plusieurs états antérieurs
+//  de vos données. Une sauvegarde manuelle dépend de la
+//  discipline de l'utilisateur et arrive toujours en retard :
+//  ces copies, elles, sont prises sans intervention.
+//
+//  Elles vivent dans la base interne du navigateur, qui n'a
+//  pas la limite de 5 Mo du stockage local. Les photos en sont
+//  exclues : volumineuses, et jamais en cause dans une perte.
+// ══════════════════════════════════════════════════════════
+const SNAP_KEY='fa_snapshots';
+const SNAP_MAX=8;          // nombre d'instantanés conservés
+const SNAP_MIN_GAP=6*3600*1000;  // 6 h entre deux prises automatiques
+
+async function listSnapshots(){
+  try{ return await idbGet(SNAP_KEY,[])||[]; }
+  catch(e){ return []; }
+}
+
+// Prend un instantané. `auto` espace les prises ; une prise
+// explicite (avant import, avant réinitialisation) passe outre.
+async function takeSnapshot(raison,auto){
+  try{
+    if(!articles.length && !invoices.length) return false;  // rien à conserver
+
+    const snaps=await listSnapshots();
+    if(auto && snaps.length){
+      const dernier=snaps[0];
+      if(Date.now()-new Date(dernier.date).getTime() < SNAP_MIN_GAP) return false;
+    }
+
+    const etat={
+      date:new Date().toISOString(),
+      raison:raison||'automatique',
+      version:APP_VERSION,
+      nbArticles:articles.length,
+      nbFactures:invoices.length,
+      // Les photos sont écartées : elles pèsent lourd et ne se perdent pas
+      articles:articles.map(a=>({...a,photo:''})),
+      invoices,
+      tiers,
+      tagTypes,
+      params,
+      seq,
+    };
+
+    snaps.unshift(etat);
+    while(snaps.length>SNAP_MAX) snaps.pop();
+    await idbSet(SNAP_KEY,snaps);
+    console.log('[instantané]',raison,'—',articles.length,'article(s),',invoices.length,'facture(s)');
+    return true;
+  }catch(e){
+    console.error('[instantané] échec',e);
+    return false;
+  }
+}
+
+async function restoreSnapshot(index){
+  const snaps=await listSnapshots();
+  const s=snaps[index];
+  if(!s){ notify('Instantané introuvable',false); return; }
+
+  const quand=new Date(s.date).toLocaleString('fr-FR');
+  if(!await askConfirm(
+      `Revenir à l'état du ${quand} ?\n\n`
+      +`${s.nbArticles} article(s) et ${s.nbFactures} facture(s) seront restaurés.\n`
+      +`L'état actuel sera conservé dans un nouvel instantané.`,
+      {title:'Restaurer un instantané',okLabel:'Restaurer'})) return;
+
+  // L'état courant devient lui-même un point de retour
+  await takeSnapshot('avant restauration',false);
+
+  const photosActuelles={};
+  articles.forEach(a=>{ if(a.photo)photosActuelles[a.id]=a.photo; });
+
+  articles = (s.articles||[]).map(a=>({...a, photo:photosActuelles[a.id]||''}));
+  invoices = s.invoices||[];
+  tiers    = s.tiers||[];
+  if(s.tagTypes) tagTypes=s.tagTypes;
+  if(s.params)   params={...params,...s.params};
+  if(s.seq)      seq={...seq,...s.seq};
+
+  _baseSuspecte=false;   // restauration explicite : la base redevient fiable
+  await persist();
+  notify(`État du ${quand} restauré — ${articles.length} article(s), ${invoices.length} facture(s)`);
+  refreshPalette();
+  updateNavBrand();
+  updateTrialUI();
+  go('articles');
+}
+
+async function renderSnapshots(){
+  const el=document.getElementById('snap-list');
+  if(!el)return;
+  const snaps=await listSnapshots();
+  if(!snaps.length){
+    el.innerHTML='<div class="empty">Aucun instantané pour le moment. '
+      +'Le premier sera pris automatiquement au prochain démarrage.</div>';
+    return;
+  }
+  el.innerHTML=snaps.map((s,i)=>{
+    const d=new Date(s.date);
+    return `<div class="snap-row">
+      <div class="snap-info">
+        <strong>${d.toLocaleString('fr-FR')}</strong>
+        <span>${s.nbArticles} article(s) · ${s.nbFactures} facture(s) · ${esc(s.raison)}</span>
+      </div>
+      <button class="btn btn-sm" onclick="restoreSnapshot(${i})">Restaurer</button>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════════
 //  CONFIRMATION
 //  Les fenêtres natives confirm() sont bloquées dans certains
 //  navigateurs mobiles et applications intégrées : l'action
@@ -5346,6 +5698,8 @@ async function importAll(input){
   r.onload=async e=>{
     try{
       const data=JSON.parse(e.target.result);
+      // L'état actuel devient un point de retour avant d'être remplacé
+      await takeSnapshot('avant import de sauvegarde',false);
       articles=data.articles||[];
       invoices=data.invoices||[];
       tiers=data.tiers||[];
@@ -5502,6 +5856,7 @@ function populateResetCounts(){
 }
 
 async function resetSelectedData(){
+  await takeSnapshot('avant réinitialisation',false);
   const sel={
     articles:     document.getElementById('rst-articles')?.checked,
     attributs:    document.getElementById('rst-attributs')?.checked,
@@ -5600,6 +5955,8 @@ function resetAllData(){
 }
 
 function loadDonneesPanel(){
+  renderSnapshots();
+  renderStorageStatus();
   const lastExport=lsRaw(LS.lastExport);
   const dateEl=document.getElementById('last-export-date');
   if(dateEl){
@@ -7016,6 +7373,7 @@ function getOrCreatePortArt(platform){
 }
 
 function importEbay(text){
+  takeSnapshot('avant import ebay',true);
   // Trouver la ligne d'en-tête (contient "Date de création de la transaction")
   const rawLines=text.split('\n');
   let headerIdx=rawLines.findIndex(l=>l.includes('Date de création de la transaction'));
@@ -7236,6 +7594,7 @@ function importEbay(text){
 
 // ══ IMPORT ETSY ══
 function importEtsy(text){
+  takeSnapshot('avant import etsy',true);
   const rows=parseCSV(text,',');
   // Détection : s'agit-il en réalité d'un relevé mensuel (etsy_statement) ?
   // Le relevé a les colonnes Type/Titre/Net ; les commandes vendues ont "Order ID".
@@ -9286,6 +9645,29 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <p>Aucune donnée ne quitte votre appareil. Le détail figure dans la
 <a href="https://nesmodels.fr/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
 
+<h4>Protection du stockage</h4>
+<p>Par d\u00e9faut, un navigateur conserve les donn\u00e9es d'un site \u00ab au mieux \u00bb : il
+s'autorise \u00e0 les effacer si l'espace disque du poste vient \u00e0 manquer, <strong>sans
+avertissement</strong>. NesFactura demande donc au d\u00e9marrage un stockage prot\u00e9g\u00e9,
+que le navigateur n'efface plus de lui-m\u00eame.</p>
+<p>L'\u00e9tat obtenu est affich\u00e9 en haut de l'\u00e9cran <strong>Donn\u00e9es &amp; portabilit\u00e9</strong>.
+S'il indique que la protection n'a pas \u00e9t\u00e9 accord\u00e9e, <strong>installez l'application</strong>
+(ic\u00f4ne d'installation dans la barre d'adresse, ou version du Microsoft Store) :
+les chances de l'obtenir augmentent fortement.</p>
+<p class="doc-note">Tant que la protection n'est pas acquise, exportez une sauvegarde
+tr\u00e8s r\u00e9guli\u00e8rement. L'application vous le rappelle au-del\u00e0 de trois jours.</p>
+
+<h4>Instantan\u00e9s automatiques</h4>
+<p>L'application conserve d'elle-m\u00eame vos <strong>huit derniers \u00e9tats</strong>, pris au
+d\u00e9marrage et avant chaque op\u00e9ration importante : import de ventes, restauration
+d'une sauvegarde, r\u00e9initialisation. Aucune action n'est requise de votre part.</p>
+<p>Vous les retrouvez dans <strong>Donn\u00e9es &amp; portabilit\u00e9</strong>, en haut de l'\u00e9cran,
+avec leur date et leur contenu. Un bouton suffit \u00e0 revenir \u00e0 l'un d'eux ; l'\u00e9tat
+courant est alors lui-m\u00eame conserv\u00e9, vous pouvez donc revenir sur votre d\u00e9cision.</p>
+<p class="doc-note">Ces instantan\u00e9s restent sur votre appareil. Ils vous prot\u00e8gent d'une
+fausse manipulation, pas d'une panne mat\u00e9rielle ni d'un vol : continuez \u00e0 exporter
+r\u00e9guli\u00e8rement une sauvegarde vers un autre support.</p>
+
 <h4>Mises à jour</h4>
 <p>NesFactura se met à jour toute seule : à l'ouverture, l'application vérifie si une version
 plus récente a été publiée et vous propose de l'appliquer. Cela vaut aussi bien pour la version
@@ -9323,6 +9705,48 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.12.0 &mdash; 9 septembre 2026</h4>
+<p><strong>Protection du stockage</strong></p>
+<p>Un navigateur conserve les donn\u00e9es d'un site \u00ab au mieux \u00bb : il s'autorise \u00e0 les
+effacer sous pression d'espace disque, sans avertissement. C'est la cause profonde des
+pertes constat\u00e9es.</p>
+<ul>
+<li>L'application demande d\u00e9sormais au d\u00e9marrage un <strong>stockage prot\u00e9g\u00e9</strong>,
+que le navigateur n'efface plus de lui-m\u00eame</li>
+<li>L'\u00e9tat obtenu est affich\u00e9 dans <strong>Donn\u00e9es &amp; portabilit\u00e9</strong>, avec
+l'espace occup\u00e9</li>
+<li>Si la protection est refus\u00e9e, le rappel d'export passe de quatorze \u00e0 trois jours</li>
+</ul>
+<p><strong>Instantan\u00e9s automatiques</strong></p>
+<p>L'application conserve d\u00e9sormais elle-m\u00eame vos <strong>huit derniers \u00e9tats</strong>.
+Une sauvegarde manuelle d\u00e9pend de votre discipline et arrive toujours en retard :
+ces copies, elles, sont prises sans intervention.</p>
+<ul>
+<li>Une prise a lieu au d\u00e9marrage et avant chaque op\u00e9ration importante : import de
+ventes, restauration d'une sauvegarde, r\u00e9initialisation</li>
+<li>Ils sont accessibles en haut de l'\u00e9cran <strong>Donn\u00e9es &amp; portabilit\u00e9</strong>,
+avec leur date et leur contenu. Un bouton suffit \u00e0 revenir \u00e0 l'un d'eux</li>
+<li>Restaurer ne d\u00e9truit rien : l'\u00e9tat courant devient lui-m\u00eame un point de retour</li>
+<li>Si la base appara\u00eet vide alors qu'elle avait d\u00e9j\u00e0 servi, la r\u00e9cup\u00e9ration du dernier
+instantan\u00e9 est propos\u00e9e imm\u00e9diatement</li>
+</ul>
+<p class="doc-note">Ces instantan\u00e9s restent sur votre appareil : ils vous prot\u00e8gent d'une
+fausse manipulation, pas d'une panne mat\u00e9rielle. Continuez \u00e0 exporter r\u00e9guli\u00e8rement
+une sauvegarde vers un autre support.</p>
+
+<h4>1.11.1 &mdash; 9 septembre 2026</h4>
+<p><strong>Protection des donn\u00e9es \u2014 compl\u00e9ment</strong></p>
+<ul>
+<li>L'application <strong>refuse d\u00e9sormais d'enregistrer une base vide</strong> par-dessus
+des donn\u00e9es existantes. C'est ce m\u00e9canisme qui rendait une perte irr\u00e9versible :
+l'application lisait une base devenue illisible, en concluait qu'il n'y avait rien,
+puis enregistrait ce vide</li>
+<li>Une base revenue vide alors qu'elle avait d\u00e9j\u00e0 servi est reconnue comme une
+anomalie et non comme un premier lancement. Toute \u00e9criture est alors bloqu\u00e9e et
+la restauration d'une sauvegarde est propos\u00e9e</li>
+<li>Les photos dont l'article n'existe plus sont supprim\u00e9es automatiquement</li>
+</ul>
 
 <h4>1.11.0 &mdash; 9 septembre 2026</h4>
 <p><strong>Correctif majeur \u2014 s\u00e9curit\u00e9 des donn\u00e9es</strong></p>
@@ -10238,14 +10662,51 @@ function checkTrialBeforeCreate(docDate){
 
 // ── Chargement asynchrone depuis IDB puis démarrage ──
 async function initApp(){
+  // Avant toute chose : demander au navigateur de ne pas effacer nos données
+  await ensurePersistentStorage();
+
   const [idbArts,idbInvs,idbRefs]=await Promise.all([
     idbGet(LS.art,null),idbGet(LS.inv,null),idbGet(LS.importedRefs,null),
   ]);
-  // Migration automatique depuis localStorage si IDB vide (première utilisation du nouveau format)
+  // Migration depuis localStorage si la base interne est encore vierge.
+  //
+  // Distinction essentielle : une base « jamais écrite » (null) et une base
+  // « vidée depuis » se ressemblent. Un indicateur pose la différence — sans
+  // lui, l'application conclurait à l'absence de données et enregistrerait
+  // ce vide par-dessus ce qui subsiste.
+  const dejaMigre = lsRaw('fa_idb_ready')==='1';
+
   if(idbArts===null){articles=ls(LS.art,[]);if(articles.length)console.log('[migrate] articles→IDB:',articles.length);}
   else articles=idbArts;
   if(idbInvs===null){invoices=ls(LS.inv,[]);if(invoices.length)console.log('[migrate] factures→IDB:',invoices.length);}
   else invoices=idbInvs;
+
+  // Base déclarée opérationnelle mais revenue vide : anomalie, pas un premier lancement
+  if(dejaMigre && !articles.length && !invoices.length){
+    console.error('[alerte] la base interne est vide alors qu\'elle avait été renseignée');
+    _baseSuspecte=true;
+    // Un instantané récent permet de repartir sans sauvegarde manuelle
+    setTimeout(async ()=>{
+      const snaps=await listSnapshots();
+      if(snaps.length){
+        const s=snaps[0], quand=new Date(s.date).toLocaleString('fr-FR');
+        if(await askConfirm(
+            `Vos données sont introuvables dans la base du navigateur.\n\n`
+            +`Un instantané du ${quand} est disponible :\n`
+            +`${s.nbArticles} article(s) et ${s.nbFactures} facture(s).\n\n`
+            +`Le restaurer maintenant ?`,
+            {title:'Récupération des données',okLabel:'Restaurer'})){
+          await restoreSnapshot(0);
+          return;
+        }
+        notify('Vous pouvez restaurer un instantané à tout moment depuis Données.',false);
+      } else {
+        notify('⚠️ Vos données sont introuvables et aucun instantané n\'est disponible. '
+          +'Restaurez votre dernière sauvegarde depuis Données → Import.',false);
+      }
+      try{ showStorageAlert(); }catch(_){}
+    },600);
+  }
   if(idbRefs===null)importedRefsSet=new Set(ls(LS.importedRefs,[]));
   else importedRefsSet=new Set(idbRefs);
 
@@ -10272,7 +10733,9 @@ async function initApp(){
       const ok = Array.isArray(relArts) && Array.isArray(relInvs)
               && relArts.length===attArts && relInvs.length===attInvs;
       if(ok){
-        // La copie est vérifiée : on peut libérer le stockage local
+        // La copie est vérifiée : la base interne fait désormais référence
+        ssRaw('fa_idb_ready','1');
+        // et le stockage local peut être libéré
         try{localStorage.removeItem(LS.inv);}catch(e){}
         try{localStorage.removeItem(LS.art);}catch(e){}
         try{localStorage.removeItem(LS.importedRefs);}catch(e){}
@@ -10286,6 +10749,10 @@ async function initApp(){
       notify('⚠️ Échec de la migration des données. Vos données d\'origine sont conservées. Exportez une sauvegarde.',false);
     }
   }
+
+  // Point de retour du jour, pris avant toute manipulation
+  if(!_baseSuspecte) takeSnapshot('démarrage',true);
+  setTimeout(checkBackupUrgency,2500);
 
   refreshPalette();updateNavBrand();checkExportReminder();updateTrialUI();initNavSections();
   const vEl=document.getElementById('nav-version-num');

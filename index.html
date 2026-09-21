@@ -926,6 +926,31 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   padding-top:6px;border-top:1px dashed var(--ivory4);
 }
 
+/* ── Import PayPal : liste de sélection des bénéficiaires ── */
+.pp-list{border:1px solid var(--ivory3);border-radius:var(--r8);max-height:44vh;overflow-y:auto;}
+.pp-row{display:grid;grid-template-columns:auto 1fr 150px 190px 96px;align-items:center;gap:10px;
+  padding:9px 12px;border-bottom:1px solid var(--ivory3);cursor:pointer;font-size:12.5px;}
+.pp-row:last-child{border-bottom:none;}
+.pp-row:hover{background:var(--ivory2);}
+.pp-check{width:15px;height:15px;cursor:pointer;accent-color:var(--gold);}
+.pp-nom{font-weight:600;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pp-new{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;
+  color:var(--gold);background:var(--ivory2);border:1px solid var(--gold-mid);
+  border-radius:3px;padding:1px 4px;vertical-align:middle;}
+.pp-nat{color:var(--ink3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pp-meta{color:var(--ink4);font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.pp-tot{text-align:right;font-weight:600;color:var(--ink);font-variant-numeric:tabular-nums;}
+@media(max-width:900px){
+  .pp-row{grid-template-columns:auto 1fr 92px;grid-template-areas:'c n t' 'c m t';row-gap:2px;}
+  .pp-check{grid-area:c;} .pp-nom{grid-area:n;} .pp-tot{grid-area:t;}
+  .pp-meta{grid-area:m;} .pp-nat{display:none;}
+}
+
+/* ── Import PayPal : empilement sur petit écran ── */
+@media(max-width:900px){
+  .pp-import-grid{grid-template-columns:1fr !important;}
+}
+
 /* ── Fenêtre de bienvenue (mobile) ── */
 .wc-overlay{display:none;}
 @media(max-width:900px){
@@ -1079,6 +1104,30 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="modal-footer">
       <button class="btn" onclick="cfResolve(false)">Annuler</button>
       <button class="btn btn-primary" id="cf-ok" onclick="cfResolve(true)">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ IMPORT PAYPAL : CHOIX DES BÉNÉFICIAIRES ═══ -->
+<div class="overlay" id="modal-paypal">
+  <div class="modal modal-lg">
+    <div class="modal-title">Import PayPal — que faut-il importer ?</div>
+    <p style="font-size:13px;color:var(--ink3);line-height:1.7;margin:-8px 0 14px">
+      Cochez les bénéficiaires dont vous voulez créer les factures d'achat. Décochez ceux
+      dont vous saisissez déjà les factures à la main — cela évite les doublons.
+      <strong style="color:var(--ink2)">Votre choix est mémorisé</strong> et sera repris
+      tel quel au prochain import.
+    </p>
+    <div id="pp-picker-sum" style="font-size:11px;font-weight:600;color:var(--ink4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:10px">
+      <button class="btn btn-sm" onclick="ppToggleAll(true)">Tout cocher</button>
+      <button class="btn btn-sm" onclick="ppToggleAll(false)">Tout décocher</button>
+    </div>
+    <div id="pp-picker-list" class="pp-list" onchange="ppUpdateTotal()"></div>
+    <div class="modal-footer">
+      <span id="pp-picker-total" style="flex:1;font-size:13px;font-weight:600;color:var(--ink2);align-self:center"></span>
+      <button class="btn" onclick="ppCancelImport()">Annuler l'import</button>
+      <button class="btn btn-primary" id="pp-picker-ok" onclick="ppConfirmImport()">Importer la sélection</button>
     </div>
   </div>
 </div>
@@ -2260,7 +2309,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
             <button class="btn btn-primary" onclick="activateLicense()" style="flex-shrink:0">Activer</button>
           </div>
           <p style="font-size:12px;color:var(--ink4);margin-top:6px">La clé est liée à votre <strong>raison sociale</strong> et votre <strong>SIRET</strong> renseignés dans l'onglet Identité ci-dessus.</p>
-          <a href="https://nesmodels.fr/nesfactura.html" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none">
+          <a href="https://nesmodels.fr/nesfactura/" target="_blank" style="display:inline-flex;align-items:center;gap:6px;margin-top:10px;font-size:12px;font-weight:600;color:var(--gold);text-decoration:none">
             🛒 Acheter une clé de licence
           </a>
         </div>
@@ -2336,7 +2385,7 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
     <div class="card" style="margin-top:0;border-left:3px solid var(--gold)">
       <div class="card-title"><span class="ct-icon">📥</span> Import canaux de vente</div>
       <p style="font-size:13px;color:var(--ink3);margin-bottom:16px;line-height:1.7">
-        Importez des fichiers d'export natifs <strong>eBay</strong> ou <strong>Etsy</strong>, ou utilisez le <strong>modèle générique</strong> pour toute autre canal de vente. Les articles inconnus sont créés automatiquement. Les commandes déjà importées sont ignorées (déduplication fiable entre imports successifs).
+        Importez des fichiers d'export natifs <strong>eBay</strong> ou <strong>Etsy</strong>, ou utilisez le <strong>modèle générique</strong> pour toute autre canal de vente. Importez également vos <strong>dépenses PayPal</strong> pour alimenter vos achats. Les articles inconnus sont créés automatiquement. Les commandes déjà importées sont ignorées (déduplication fiable entre imports successifs).
       </p>
 
       <!-- eBay + Etsy natifs -->
@@ -2365,6 +2414,25 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
             <div class="dz-text">Fichier <strong>etsy_statement_*.csv</strong> (séparateur <code>,</code>)</div><div class="dz-help">Finances → Relevés mensuels → Générer le CSV</div>
             <input type="file" id="import-etsy-statement" accept=".csv" style="display:none" onchange="importEtsyStatement(this)">
           </div>
+        </div>
+      </div>
+
+      <!-- PayPal : dépenses -->
+      <div class="divider-label">Dépenses — moyens de paiement</div>
+      <div style="display:grid;grid-template-columns:1fr 2fr;gap:16px;margin-bottom:16px" class="pp-import-grid">
+        <div>
+          <div style="font-weight:600;font-size:12px;margin-bottom:8px">🅿️ PayPal — Rapport d'activité</div>
+          <div class="drop-zone" style="padding:14px" onclick="document.getElementById('import-paypal').click()">
+            <div class="dz-icon" style="font-size:24px;margin-bottom:6px">🅿️</div>
+            <div class="dz-text">Fichier <strong>Download_*.CSV</strong> (rapport d'activité)</div><div class="dz-help">Activité → Relevés → Rapports d'activité → CSV, toutes les transactions</div>
+            <input type="file" id="import-paypal" accept=".csv,.CSV" style="display:none" onchange="importPlatformCSV(this,'paypal')">
+          </div>
+        </div>
+        <div style="background:var(--ivory2);border:1px solid var(--ivory3);border-radius:var(--r8);padding:14px 16px;font-size:12px;color:var(--ink3);line-height:1.7">
+          <strong style="color:var(--ink2)">Vous choisissez ce qui entre</strong> — une fenêtre vous présente les bénéficiaires trouvés dans le fichier, avec leur montant ; décochez ceux dont vous saisissez déjà les factures à la main. Votre choix est mémorisé pour les imports suivants.<br>
+          <strong style="color:var(--ink2)">Ce qu'il crée</strong> — une <strong>facture d'achat par bénéficiaire retenu et par mois</strong>, avec une ligne par paiement, et un classement automatique de la dépense (port, emballage, matières premières, abonnement, matériel…).<br>
+          <strong style="color:var(--ink2)">Ce qu'il écarte</strong> — les virements d'approvisionnement depuis votre banque (ce ne sont pas des recettes), les pré-autorisations en doublon, et les deux jambes d'une conversion de devise : un paiement en devise est repris au <strong>montant euro réellement débité</strong>.<br>
+          <strong style="color:var(--ink2)">Pourquoi il complète l'import eBay</strong> — eBay ne facture qu'une partie de vos affranchissements ; les autres passent par Packlink, La Poste ou votre compte transporteur et sont prélevés directement sur PayPal. Ils n'apparaissent donc <em>nulle part</em> dans le rapport eBay. Les deux imports sont complémentaires : chacun couvre des colis différents, et ils utilisent des articles distincts (<code>PORT_EBAY</code> d'un côté, <code>PORT_PACKLINK</code> et consorts de l'autre), sans risque de double comptage.
         </div>
       </div>
 
@@ -2923,8 +2991,8 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.12.1';
-const APP_DATE    = '2026-08-25';
+const APP_VERSION = '1.14.0';
+const APP_DATE    = '2026-09-21';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
@@ -7341,7 +7409,13 @@ function importPlatformCSV(input,platform){
     try{
       let res;
       if(platform==='ebay')res=importEbay(text);
+      else if(platform==='paypal')res=importPaypal(text);
       else res=importEtsy(text);
+      if(res&&res.deferred){
+        const lg=document.getElementById('art-import-log');
+        if(lg)lg.style.display='block';
+        return;   // la suite attend la sélection des bénéficiaires
+      }
       persist();
       // Si le fichier était en fait un relevé de frais, afficher les achats
       const side=(res&&res.redirected==='achat')?'achat':'vente';
@@ -7843,6 +7917,285 @@ function importEtsyStatementText(text){
   if(dupes>0)logImport(`ℹ ${dupes} lot(s) déjà importé(s) ignoré(s).`);
 }
 
+
+// ══ IMPORT PAYPAL — DÉPENSES ══
+// Le rapport d'activité PayPal liste chaque mouvement du compte. Trois familles
+// de lignes ne sont PAS des dépenses et doivent être écartées, faute de quoi le
+// bilan serait faux :
+//   · « Virement bancaire sur le compte PayPal » (Crédit) — approvisionnement
+//     depuis le compte bancaire, apparié à chaque paiement. Compté comme
+//     recette, il créerait un produit fantôme égal au total des dépenses.
+//   · « Autorisation standard » (Mémo) — pré-autorisation, doublon du paiement.
+//   · « Conversion de devise standard » — les deux jambes d'un change. La jambe
+//     en euros sert de montant au paiement en devise, elle n'est pas une
+//     dépense supplémentaire.
+function parsePaypalDate(s){
+  const m=(s||'').replace(/"/g,'').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})/);
+  if(!m)return today();
+  const y=m[3].length===2?'20'+m[3]:m[3];
+  return `${y}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
+}
+function slugRef(s,max){
+  return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'')
+    .toUpperCase().replace(/[^A-Z0-9]+/g,'_').replace(/^_|_$/g,'').slice(0,max||24);
+}
+// Nature de la dépense déduite du bénéficiaire et du libellé de l'objet.
+function classifyPaypalExpense(nom,objet){
+  const t=((nom||'')+' '+(objet||'')).normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+  const RULES=[
+    [/packlink|auctane/,                        'Frais de port Packlink',        'PORT_PACKLINK'],
+    [/mondial\s*relay/,                         'Frais de port Mondial Relay',   'PORT_MONDIAL_RELAY'],
+    [/la\s*poste|laposte|colissimo/,            'Frais de port La Poste',        'PORT_LAPOSTE'],
+    [/chronopost/,                              'Frais de port Chronopost',      'PORT_CHRONOPOST'],
+    [/\bdhl\b/,                                 'Frais de port DHL',             'PORT_DHL'],
+    [/\bups\b/,                                 'Frais de port UPS',             'PORT_UPS'],
+    [/fedex/,                                   'Frais de port FedEx',           'PORT_FEDEX'],
+    [/\bgls\b|\bdpd\b|sendcloud|shippo/,        'Frais de port messagerie',      'PORT_MESSAGERIE'],
+    [/karton|carton|emballage|packaging|rajapack|papier bulle|adhesif/,
+                                                'Emballage et conditionnement',  'ACH_EMBALLAGE'],
+    [/resin|resine|filament|elegoo|anycubic|phrozen|sunlu|siraya|silicone|polyurethane|pigment|peinture/,
+                                                'Matières premières',            'ACH_MATIERE'],
+    [/vistaprint|printful|exaprint|imprim|flyer|sticker|etiquette/,
+                                                'Impression et communication',   'ACH_IMPRESSION'],
+    [/google payment|subscription|abonnement|microsoft|adobe|canva|dropbox|openai|anthropic|magisto|licence|software|\bsaas\b/,
+                                                'Abonnement logiciel',           'ACH_LOGICIEL'],
+    [/samsung|\bapple\b|ldlc|darty|boulanger|amazon|imprimante|scanner|\becran\b/,
+                                                'Matériel et équipement',        'ACH_MATERIEL'],
+    [/paypal (inc|pte|europe)/,                 'Dépense PayPal à qualifier',    'ACH_PP_A_QUALIFIER'],
+  ];
+  for(let i=0;i<RULES.length;i++){
+    if(RULES[i][0].test(t))return {label:RULES[i][1],ref:RULES[i][2]};
+  }
+  const court=slugRef(nom||objet||'divers',24);
+  return {label:((nom||objet||'Dépense PayPal').trim().slice(0,60)),ref:'ACH_PP_'+(court||'DIVERS')};
+}
+function getOrCreatePaypalArt(ref,label){
+  let a=articles.find(x=>x.ref===ref);
+  if(!a){
+    a={id:seq.art++,ref,name:label,price:0,unit:/^PORT_/.test(ref)?'envoi':'forfait',
+      desc:'Dépense importée depuis PayPal',tagValues:{},photo:'',platformRefs:[],
+      nomenclature:[],cost:0,costMode:'manual'};
+    articles.push(a);
+  }
+  return a;
+}
+function paypalPrepare(text){
+  const cleaned=(text||'').replace(/^﻿/,'');
+  const rows=parseCSV(cleaned,detectSep(cleaned));
+  if(!rows.length){logImport('Fichier PayPal vide ou illisible.','err');return null;}
+  const C={date:'Date',nom:'Nom',type:'Type',etat:'État',dev:'Devise',net:'Net',
+    brut:'Avant commission',txn:'Numéro de transaction',
+    refTxn:'Numéro de la transaction de référence',objet:'Objet',titre:"Titre de l'objet",
+    impact:'Impact sur le solde',fact:'Numéro de facture'};
+  const cols=Object.keys(rows[0]);
+  if(!cols.includes(C.impact)||!cols.includes(C.txn)){
+    logImport('Format PayPal non reconnu — colonnes « Impact sur le solde » / « Numéro de transaction » introuvables.','err');
+    logImport("→ Attendu : un rapport d'activité PayPal au format CSV (Activité → Relevés → Rapports d'activité).",'err');
+    return null;
+  }
+  logImport(`PayPal : ${rows.length} ligne(s) lue(s).`);
+
+  // Jambe en euros des conversions de devise, indexée sur la transaction d'origine
+  const convEUR={};
+  rows.forEach(r=>{
+    if(!/conversion de devise/i.test(r[C.type]||''))return;
+    if((r[C.impact]||'').trim()!=='Débit')return;
+    const k=(r[C.refTxn]||'').trim(); if(!k)return;
+    convEUR[k]={amount:Math.abs(parseMoney(r[C.net]||r[C.brut]||'0')),dev:(r[C.dev]||'').trim()};
+  });
+
+  let skipFunding=0,skipMemo=0,skipCredit=0,skipConv=0,skipEtat=0,dupes=0,converted=0;
+  const expenses=[];
+  rows.forEach(r=>{
+    const impact=(r[C.impact]||'').trim();
+    const type=(r[C.type]||'').trim();
+    const etat=(r[C.etat]||'').trim();
+    if(/conversion de devise/i.test(type)){skipConv++;return;}
+    if(impact==='Mémo'){skipMemo++;return;}
+    if(impact!=='Débit'){
+      if(/virement bancaire/i.test(type))skipFunding++;else skipCredit++;
+      return;
+    }
+    if(/annul|echou|échou|refus/i.test(etat)){skipEtat++;return;}
+    const txn=(r[C.txn]||'').trim();
+    let amount=Math.abs(parseMoney(r[C.net]||r[C.brut]||'0'));
+    let dev=(r[C.dev]||'EUR').trim();
+    let note='';
+    if(dev&&dev!=='EUR'){
+      const conv=convEUR[txn];
+      if(conv&&conv.amount>0&&conv.dev!==dev){
+        note=` [${amount.toFixed(2).replace('.',',')} ${dev} convertis]`;
+        amount=conv.amount; converted++;
+      } else {
+        logImport(`⚠ Transaction ${txn} en ${dev} sans ligne de conversion : montant repris tel quel, à vérifier.`,'err');
+      }
+    }
+    if(!(amount>0))return;
+    if(importedRefsSet.has('paypal-'+txn)){dupes++;return;}
+    expenses.push({txn,date:parsePaypalDate(r[C.date]||''),
+      nom:(r[C.nom]||'').trim()||'Bénéficiaire PayPal',
+      objet:((r[C.objet]||r[C.titre]||'').trim()),amount,note});
+  });
+
+  if(skipFunding)logImport(`↩ ${skipFunding} approvisionnement(s) depuis la banque écarté(s) (ce ne sont pas des recettes).`);
+  if(skipMemo)logImport(`↩ ${skipMemo} pré-autorisation(s) écartée(s) (doublons des paiements).`);
+  if(skipConv)logImport(`↩ ${skipConv} ligne(s) de conversion de devise traitée(s) comme montant du paiement d'origine.`);
+  if(skipEtat)logImport(`↩ ${skipEtat} opération(s) annulée(s) ou échouée(s) écartée(s).`);
+  if(skipCredit)logImport(`ℹ ${skipCredit} crédit(s) ignoré(s) : cet import ne traite que les dépenses.`);
+  if(converted)logImport(`ℹ ${converted} paiement(s) en devise converti(s) au montant euro réellement débité.`);
+  if(dupes)logImport(`ℹ ${dupes} transaction(s) déjà importée(s) ignorée(s).`);
+
+  if(!expenses.length){
+    logImport(dupes?`ℹ Aucune nouvelle dépense — ${dupes} déjà importée(s).`:'Aucune dépense trouvée dans ce fichier.',dupes?'info':'err');
+    return null;
+  }
+
+  // Une facture d'achat par bénéficiaire et par mois, une ligne par transaction.
+  const groups={};
+  expenses.forEach(e=>{
+    const mkey=e.date.slice(0,7);
+    const gkey=e.nom.toLowerCase()+'|'+mkey;
+    if(!groups[gkey])groups[gkey]={nom:e.nom,mkey,date:e.date,items:[]};
+    const g=groups[gkey];
+    if(e.date<g.date)g.date=e.date;
+    g.items.push(e);
+  });
+  return {groups:Object.keys(groups).map(k=>groups[k])
+    .sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:0),dupes};
+}
+
+// Crée les factures d'achat pour les groupes retenus par l'utilisateur.
+function paypalCommit(groups){
+  if(!groups||!groups.length)return {invoices:0,expenses:0,total:0,articles:0};
+  takeSnapshot('avant import paypal',true);
+  const artsBefore=articles.length;
+  let newInv=0,total=0,nbDep=0;
+  groups.forEach(g=>{
+    getOrCreateTiersByName(g.nom,'fournisseur');
+    const lines=g.items.slice().sort((a,b)=>a.date<b.date?-1:1).map(e=>{
+      const cls=classifyPaypalExpense(e.nom,e.objet);
+      const art=getOrCreatePaypalArt(cls.ref,cls.label);
+      const detail=e.objet&&e.objet.toLowerCase()!==art.name.toLowerCase()
+        ? ' — '+e.objet.replace(/\s+/g,' ').slice(0,60) : '';
+      total+=e.amount; nbDep++;
+      return {aid:art.id,ref:art.ref,name:(art.name+detail+e.note).slice(0,140),
+        platRef:e.txn,qty:1,price:e.amount,remise:0};
+    });
+    const slug=slugRef(g.nom,20)||'DIVERS';
+    let importRef='paypal-'+slug+'-'+g.mkey,n=2;
+    while(invoices.some(i=>i.importRef===importRef))importRef='paypal-'+slug+'-'+g.mkey+'-'+(n++);
+    invoices.push({id:nextId(),type:'achat',docType:'facture',locked:false,pieces:[],
+      tier:g.nom,tierAddr:'',num:allocNum('achat','facture'),
+      date:g.date,ech:g.date,tva:0,status:params.defaultStatus||'brouillon',
+      notes:`Dépenses PayPal — ${g.nom} — ${g.mkey}`,
+      platform:'',platRef:'',remb:0,lines,importRef});
+    g.items.forEach(e=>importedRefsSet.add('paypal-'+e.txn));
+    newInv++;
+  });
+  const newArts=articles.length-artsBefore;
+  logImport(`✅ ${newInv} facture(s) d'achat créée(s) — ${nbDep} dépense(s), ${total.toFixed(2).replace('.',',')} € au total, ${newArts} article(s) créé(s).`,'ok');
+  if(articles.some(a=>a.ref==='ACH_PP_A_QUALIFIER'))
+    logImport("⚠ Certaines lignes sont rattachées à « Dépense PayPal à qualifier » : PayPal ne fournit pas de bénéficiaire pour ces paiements. Reclassez-les manuellement.",'err');
+  return {invoices:newInv,expenses:nbDep,total,articles:newArts};
+}
+
+// ── Fenêtre de sélection des bénéficiaires ──
+// C'est l'utilisateur qui décide de ce qu'il importe : certaines factures sont
+// déjà saisies à la main, d'autres non. Le choix est mémorisé par bénéficiaire
+// pour que les imports suivants se limitent à une confirmation.
+let _ppPending=null;
+function importPaypal(text){
+  const prep=paypalPrepare(text);
+  if(!prep)return {redirected:'achat'};
+  _ppPending=prep.groups;
+  renderPaypalPicker();
+  return {redirected:'achat',deferred:true};
+}
+function ppChoiceMemory(){
+  if(!params.paypalSuppliers||typeof params.paypalSuppliers!=='object')params.paypalSuppliers={};
+  return params.paypalSuppliers;
+}
+function renderPaypalPicker(){
+  const el=document.getElementById('pp-picker-list');
+  if(!el)return;
+  const mem=ppChoiceMemory();
+  // Regrouper par bénéficiaire (plusieurs mois possibles dans un même fichier)
+  const byNom={};
+  _ppPending.forEach((g,idx)=>{
+    if(!byNom[g.nom])byNom[g.nom]={nom:g.nom,idx:[],nb:0,total:0,mois:{}};
+    const b=byNom[g.nom];
+    b.idx.push(idx); b.nb+=g.items.length;
+    b.total+=g.items.reduce((s,e)=>s+e.amount,0);
+    b.mois[g.mkey]=true;
+  });
+  const list=Object.keys(byNom).map(k=>byNom[k]).sort((a,b)=>b.total-a.total);
+  const nTot=list.reduce((s,b)=>s+b.nb,0);
+  const eurTot=list.reduce((s,b)=>s+b.total,0);
+  el.innerHTML=list.map(b=>{
+    const known=Object.prototype.hasOwnProperty.call(mem,b.nom);
+    const on=known?!!mem[b.nom]:true;
+    const mois=Object.keys(b.mois).sort().join(', ');
+    const cls=classifyPaypalExpense(b.nom,b.idx.length?(_ppPending[b.idx[0]].items[0].objet||''):'');
+    return `<label class="pp-row">
+      <input type="checkbox" class="pp-check" data-idx="${b.idx.join(',')}" data-nom="${esc(b.nom)}" ${on?'checked':''}>
+      <span class="pp-nom">${esc(b.nom)}${known?'':' <span class="pp-new">nouveau</span>'}</span>
+      <span class="pp-nat">${esc(cls.label)}</span>
+      <span class="pp-meta">${b.nb} dépense${b.nb>1?'s':''} · ${esc(mois)}</span>
+      <span class="pp-tot">${fmt(b.total)}</span>
+    </label>`;
+  }).join('');
+  const sum=document.getElementById('pp-picker-sum');
+  if(sum)sum.textContent=`${list.length} bénéficiaire${list.length>1?'s':''} · ${nTot} dépense${nTot>1?'s':''} · ${fmt(eurTot)}`;
+  ppUpdateTotal();
+  openModal('modal-paypal');
+}
+function ppToggleAll(on){
+  document.querySelectorAll('#pp-picker-list .pp-check').forEach(cb=>cb.checked=on);
+  ppUpdateTotal();
+}
+function ppUpdateTotal(){
+  if(!_ppPending)return;
+  let nb=0,eur=0,benef=0;
+  document.querySelectorAll('#pp-picker-list .pp-check').forEach(cb=>{
+    if(!cb.checked)return;
+    benef++;
+    (cb.dataset.idx||'').split(',').filter(Boolean).forEach(i=>{
+      const g=_ppPending[+i]; if(!g)return;
+      nb+=g.items.length; eur+=g.items.reduce((s,e)=>s+e.amount,0);
+    });
+  });
+  const el=document.getElementById('pp-picker-total');
+  if(el)el.textContent=benef?`Importer ${nb} dépense${nb>1?'s':''} — ${fmt(eur)}`:'Aucune sélection';
+  const btn=document.getElementById('pp-picker-ok');
+  if(btn)btn.disabled=!benef;
+}
+function ppCancelImport(){
+  _ppPending=null;
+  closeModal('modal-paypal');
+  logImport('Import annulé — aucune facture créée.');
+}
+function ppConfirmImport(){
+  if(!_ppPending){closeModal('modal-paypal');return;}
+  const mem=ppChoiceMemory();
+  const keep=[];
+  document.querySelectorAll('#pp-picker-list .pp-check').forEach(cb=>{
+    mem[cb.dataset.nom]=cb.checked;
+    if(!cb.checked)return;
+    (cb.dataset.idx||'').split(',').filter(Boolean).forEach(i=>{
+      const g=_ppPending[+i]; if(g)keep.push(g);
+    });
+  });
+  const ignores=_ppPending.length-keep.length;
+  _ppPending=null;
+  closeModal('modal-paypal');
+  if(!keep.length){logImport('Aucun bénéficiaire retenu — aucune facture créée.');return;}
+  if(ignores)logImport(`↩ ${ignores} lot(s) écarté(s) par votre sélection.`);
+  paypalCommit(keep);
+  persist();
+  renderInvoices('achat');
+  renderStats('achat');
+  go('achats');
+}
 
 function exportStatsPDF(){
   const accent=params.accentColor||'#B8963E';
@@ -9470,7 +9823,7 @@ applicable \u00e0 votre entreprise aupr\u00e8s de votre expert-comptable.</p>
 <p>Une facture verrouillée ne peut plus être modifiée. Verrouillez après règlement pour figer vos comptes.</p>`
   },
   {
-    icon:'📥', title:'Imports eBay & Etsy',
+    icon:'📥', title:'Imports eBay, Etsy & PayPal',
     content:`
 <p>NesFactura importe les transactions depuis les exports CSV des plateformes. Accédez aux imports depuis <strong>Données</strong>.</p>
 <h4>eBay — Rapport de transactions</h4>
@@ -9522,8 +9875,79 @@ ligne par ligne : il ne convient pas à cet import.</p>
 <li><strong>Factures d'achat par commande</strong> — commissions (transaction fee, regulatory operating fee, processing fee…) rattachées à leur Order ID</li>
 <li><strong>Factures de frais généraux</strong> — frais de mise en vente et autres frais sans commande, regroupés par mois</li>
 </ul>
+<h4>PayPal — Rapport d'activité (dépenses)</h4>
+<p><strong>Où trouver le fichier</strong> — depuis votre compte PayPal :</p>
+<ol class="doc-steps">
+<li>Ouvrez <strong>Activité</strong>, puis <strong>Relevés</strong></li>
+<li>Choisissez <strong>Rapports d'activité</strong> (ou « Activité personnalisée »)</li>
+<li>Sélectionnez la <strong>plage de dates</strong> et le type <strong>Toutes les transactions</strong></li>
+<li>Format <strong>CSV</strong>, puis créez et téléchargez le rapport</li>
+</ol>
+<p>Vous obtenez un fichier <code>Download_*.CSV</code>. Déposez-le dans la zone
+<strong>PayPal — Rapport d'activité</strong> de l'écran Données.</p>
+<h4>PayPal — vous choisissez ce qui entre en comptabilité</h4>
+<p>L'import ne crée rien tout de suite. Il analyse le fichier et vous présente une fenêtre
+listant les <strong>bénéficiaires</strong> qu'il y a trouvés, avec pour chacun la nature de
+la dépense, le nombre de paiements, les mois concernés et le montant total. Vous cochez
+ceux que vous voulez importer.</p>
+<p>C'est le point important si vous saisissez déjà certaines factures à la main : votre
+fournisseur de résine vous envoie une vraie facture que vous enregistrez vous-même, alors
+que les étiquettes Packlink n'existent nulle part ailleurs que sur ce relevé. Décochez le
+premier, cochez le second, et vous n'aurez jamais de doublon à nettoyer.</p>
+<p><strong>Votre choix est mémorisé par bénéficiaire.</strong> Au mois suivant, la fenêtre
+se rouvre avec vos décisions précédentes déjà appliquées : il ne vous reste qu'à valider.
+Un bénéficiaire encore jamais rencontré est coché d'office et signalé comme
+<strong>nouveau</strong>, pour que rien n'entre à votre insu et que rien ne vous échappe.</p>
+<p class="doc-note">Un bénéficiaire décoché n'est pas « consommé » : ses transactions
+restent importables. Si vous changez d'avis, réimportez le même fichier et cochez-le —
+seul ce qui manque sera ajouté. De même, annuler la fenêtre ne laisse aucune trace.</p>
+<p>Pour chaque bénéficiaire retenu, l'import crée <strong>une facture d'achat par mois</strong>,
+avec une ligne par paiement.</p>
+<p>Chaque dépense est rattachée à un article de nature déduit du bénéficiaire et du libellé :
+frais de port (Packlink, Mondial Relay, La Poste, Chronopost, DHL, UPS…), emballage et
+conditionnement, matières premières, impression et communication, abonnement logiciel,
+matériel et équipement. Un bénéficiaire inconnu reçoit son propre article, que vous pouvez
+renommer ou fusionner ensuite.</p>
+<h4>PayPal — ce que l'import écarte, et pourquoi</h4>
+<p>Un relevé PayPal ne contient pas que des dépenses. Trois familles de lignes sont
+volontairement ignorées :</p>
+<ul>
+<li><strong>Virements bancaires sur le compte PayPal</strong> — chaque paiement est financé
+par un prélèvement sur votre compte bancaire, qui apparaît en crédit. Compté comme une
+recette, il créerait un chiffre d'affaires fictif égal au total de vos dépenses.</li>
+<li><strong>Autorisations standard</strong> (mention « Mémo ») — ce sont des
+pré-autorisations, doublons du paiement définitif.</li>
+<li><strong>Conversions de devise</strong> — un achat en devise étrangère apparaît deux fois.
+NesFactura retient le <strong>montant en euros réellement débité</strong> et signale la
+conversion dans le libellé de la ligne.</li>
+</ul>
+<p class="doc-note">Les crédits autres qu'un approvisionnement (remboursement d'un
+fournisseur, par exemple) ne sont pas importés : le compte-rendu d'import vous indique
+combien ont été ignorés, à saisir manuellement si nécessaire.</p>
+<h4>PayPal et eBay : deux circuits d'affranchissement complémentaires</h4>
+<p>C'est la raison principale d'importer PayPal quand vous vendez sur eBay. Lorsque vous
+achetez une étiquette depuis eBay, deux cas se présentent :</p>
+<ul>
+<li>eBay vous facture lui-même le bordereau — la ligne apparaît dans le rapport de
+transactions eBay, sous le type <strong>Bordereau d'affranchissement</strong>, et alimente
+l'article <code>PORT_EBAY</code>.</li>
+<li>eBay vous redirige vers un prestataire (<strong>Packlink</strong> notamment), qui prélève
+directement sur votre compte PayPal. Cette dépense <strong>n'apparaît nulle part</strong>
+dans le rapport eBay : sans l'import PayPal, elle est purement et simplement absente de
+votre comptabilité.</li>
+</ul>
+<p>Les deux imports sont donc <strong>complémentaires, pas redondants</strong> : ils portent
+sur des colis différents et alimentent des articles différents
+(<code>PORT_EBAY</code> d'une part, <code>PORT_PACKLINK</code>, <code>PORT_MONDIAL_RELAY</code>,
+<code>PORT_LAPOSTE</code> d'autre part). Il n'y a pas de double comptage.</p>
+<p class="doc-note">Conséquence sur vos marges : tant que vous n'importez que le rapport
+eBay, votre coût de port réel est <strong>largement sous-estimé</strong>, et votre marge
+d'autant surévaluée. Importez le relevé PayPal du même mois pour obtenir le coût
+d'expédition complet.</p>
 <h4>Déduplication</h4>
-<p>Chaque transaction est identifiée par une clé unique. Réimporter le même fichier ne crée pas de doublons.</p>
+<p>Chaque transaction est identifiée par une clé unique — pour PayPal, le numéro de
+transaction. Réimporter le même fichier, ou deux périodes qui se chevauchent, ne crée
+pas de doublons.</p>
 <h4>Import générique CSV</h4>
 <p>Format libre pour importer des factures depuis d'autres sources. Voir le modèle téléchargeable dans Données.</p>`
   },
@@ -9643,7 +10067,7 @@ Ligne 2 : Coût théorique · Marge théorique · Panier moyen · Ratio Achats/V
 <p>La zone de danger permet de supprimer sélectivement articles, factures ou paramètres sans tout effacer. Irréversible.</p>
 <h4>Confidentialité</h4>
 <p>Aucune donnée ne quitte votre appareil. Le détail figure dans la
-<a href="https://nesmodels.fr/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
+<a href="https://nesmodels.fr/nesfactura/confidentialite.html" target="_blank">politique de confidentialité</a>.</p>
 
 <h4>Protection du stockage</h4>
 <p>Par d\u00e9faut, un navigateur conserve les donn\u00e9es d'un site \u00ab au mieux \u00bb : il
@@ -9705,6 +10129,62 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.14.0 &mdash; 21 septembre 2026</h4>
+<p><strong>Import PayPal des dépenses</strong></p>
+<p>Le rapport d'activité PayPal alimente désormais vos factures d'achat. C'est
+particulièrement utile si vous vendez sur eBay : une partie de vos affranchissements
+transite par un prestataire (Packlink notamment) qui prélève directement sur PayPal, et
+n'apparaît donc <em>nulle part</em> dans le rapport de transactions eBay. Sans cet import,
+votre coût d'expédition réel était largement sous-estimé, et votre marge d'autant
+surévaluée.</p>
+<ul>
+<li><strong>Vous choisissez ce qui entre</strong> — une fenêtre liste les bénéficiaires
+trouvés dans le fichier avec leur nature, leur nombre de paiements et leur montant.
+Décochez ceux dont vous saisissez déjà les factures à la main : aucun doublon à
+nettoyer ensuite</li>
+<li><strong>Votre choix est mémorisé</strong> par bénéficiaire et repris au mois suivant.
+Un bénéficiaire encore jamais rencontré arrive coché et signalé comme nouveau</li>
+<li>Un bénéficiaire écarté n'est pas consommé : ses transactions restent importables si
+vous changez d'avis. Annuler la fenêtre ne laisse aucune trace</li>
+<li>Une facture d'achat par bénéficiaire retenu et par mois, une ligne par paiement,
+avec classement automatique de la dépense : port par transporteur, emballage, matières
+premières, impression, abonnement logiciel, matériel</li>
+</ul>
+<p><strong>Trois pièges du format PayPal neutralisés</strong></p>
+<ul>
+<li>Les <strong>virements d'approvisionnement</strong> depuis votre banque, appariés à
+chaque paiement, sont écartés : importés naïvement ils auraient créé un chiffre
+d'affaires fictif égal au total de vos dépenses</li>
+<li>Les <strong>pré-autorisations</strong> (mention « Mémo »), doublons du paiement
+définitif, sont ignorées</li>
+<li>Un <strong>achat en devise</strong> est repris au montant en euros réellement débité,
+et non au montant affiché dans la devise d'origine</li>
+</ul>
+<p>La déduplication s'appuie sur le numéro de transaction PayPal : réimporter le même
+fichier, ou deux périodes qui se chevauchent, ne crée pas de doublons.</p>
+<p><strong>Documentation</strong></p>
+<ul>
+<li>La rubrique d'aide sur les imports couvre désormais PayPal : où trouver le rapport,
+ce que l'import écarte et pourquoi, et l'articulation avec l'import eBay</li>
+</ul>
+
+<h4>1.13.1 &mdash; 9 septembre 2026</h4>
+<p><strong>Site</strong></p>
+<ul>
+<li>La page de vente est accessible \u00e0 l'adresse courte
+<code>nesmodels.fr/nesfactura/</code></li>
+</ul>
+
+<h4>1.13.0 &mdash; 9 septembre 2026</h4>
+<p><strong>Site</strong></p>
+<ul>
+<li>Les pages NesFactura sont regroup\u00e9es dans un r\u00e9pertoire d\u00e9di\u00e9
+(<code>nesmodels.fr/nesfactura/</code>) : s\u00e9paration plus nette d'avec le reste du
+site et meilleure lisibilit\u00e9 pour les moteurs de recherche</li>
+<li>Les anciennes adresses redirigent vers les nouvelles : les liens d\u00e9j\u00e0 diffus\u00e9s
+et l'adresse d\u00e9clar\u00e9e au Microsoft Store continuent de fonctionner</li>
+</ul>
 
 <h4>1.12.1 &mdash; 9 septembre 2026</h4>
 <p><strong>Site de vente</strong></p>
@@ -10592,7 +11072,7 @@ function showTrialBlocked(reason){
       <h2 style="font-size:20px;font-weight:700;color:var(--ink);margin-bottom:10px">${title}</h2>
       <p style="font-size:14px;color:var(--ink3);line-height:1.6;margin-bottom:24px">${msg}</p>
       <div style="display:flex;flex-direction:column;gap:10px">
-        <a href="https://nesmodels.fr/nesfactura.html" target="_blank"
+        <a href="https://nesmodels.fr/nesfactura/" target="_blank"
            style="display:block;background:var(--gold);color:#fff;padding:14px;border-radius:var(--r8);font-weight:700;font-size:15px;text-decoration:none">
           🛒 ${reason==='annual-expired'?'Renouveler ma licence':'Acheter la licence NesFactura'}
         </a>

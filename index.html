@@ -951,11 +951,27 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
   .pp-import-grid{grid-template-columns:1fr !important;}
 }
 
+/* ── Notifications sur petit écran ──
+   Le décalage horizontal est calculé sur la largeur du menu latéral, qui
+   n'existe pas sur mobile : la bulle sortait de l'écran et se réduisait à
+   une colonne d'une ligne par mot. Elle occupe ici toute la largeur utile,
+   et remonte au-dessus du bandeau d'alerte quand celui-ci est affiché. */
+@media(max-width:900px){
+  #notif{
+    left:12px;right:12px;max-width:none;
+    bottom:calc(16px + env(safe-area-inset-bottom));
+    line-height:1.5;
+  }
+  body.has-storage-alert #notif{
+    bottom:calc(120px + env(safe-area-inset-bottom));
+  }
+}
+
 /* ── Fenêtre de bienvenue (mobile) ── */
 .wc-overlay{display:none;}
 @media(max-width:900px){
   .wc-overlay.open{
-    display:flex;position:fixed;inset:0;z-index:800;
+    display:flex;position:fixed;inset:0;z-index:1000;
     flex-direction:column;justify-content:flex-end;
     background:rgba(28,28,30,.62);backdrop-filter:blur(3px);
     padding:0 14px calc(20px + env(safe-area-inset-bottom));
@@ -1013,11 +1029,15 @@ hr.sep{border:none;border-top:1px solid var(--ivory3);margin:20px 0;}
 .storage-alert{
   position:fixed;left:0;right:0;bottom:0;z-index:900;
   display:flex;align-items:center;gap:12px;flex-wrap:wrap;
-  padding:14px 20px;background:#7F1D1D;color:#fff;
+  padding:14px 20px calc(14px + env(safe-area-inset-bottom));
+  background:#7F1D1D;color:#fff;
   font-size:13.5px;line-height:1.5;
   box-shadow:0 -2px 16px rgba(0,0,0,.3);
 }
 .storage-alert .btn{background:#fff;color:#7F1D1D;border:none;font-weight:600;}
+/* Le bandeau est fixé en bas : sans cette réserve il masquerait la fin des
+   listes et la barre d'action mobile. */
+body.has-storage-alert{padding-bottom:96px;}
 
 /* Instantanés automatiques */
 .snap-list{display:flex;flex-direction:column;gap:7px;}
@@ -2790,16 +2810,46 @@ function ss(k,v){
   }
 }
 
-// Bandeau permanent tant que le problème n'est pas résolu
-function showStorageAlert(){
+// Effectifs réellement enregistrés lors de la dernière sauvegarde réussie.
+//
+// C'est ce repère — et non le simple fait d'avoir déjà migré — qui distingue
+// « cette base n'a jamais rien contenu » de « cette base contenait des données
+// et revient vide ». Un premier lancement écrit légitimement une base vide :
+// le prendre pour une perte déclencherait l'alarme chez tout nouvel
+// utilisateur, et bloquerait ensuite tous ses enregistrements.
+const LS_COUNTS='fa_idb_counts';
+function lireEffectifs(){
+  try{
+    const v=JSON.parse(localStorage.getItem(LS_COUNTS)||'null');
+    if(v&&typeof v==='object')return {art:+v.art||0,inv:+v.inv||0};
+  }catch(e){}
+  return {art:0,inv:0};
+}
+function noterEffectifs(){
+  // Écriture directe : passer par ss() ferait remonter une fausse saturation
+  // pour une simple ligne de comptabilité interne.
+  try{
+    localStorage.setItem(LS_COUNTS,
+      JSON.stringify({art:articles.length,inv:invoices.length,t:Date.now()}));
+  }catch(e){}
+}
+
+// Bandeau permanent tant que le problème n'est pas résolu.
+// Deux causes distinctes, deux messages : un stockage plein et des données
+// introuvables n'appellent pas la même réaction de l'utilisateur.
+function showStorageAlert(cause){
   if(document.getElementById('storage-alert'))return;
+  const introuvable = cause==='introuvable';
   const d=document.createElement('div');
   d.id='storage-alert';
   d.className='storage-alert';
-  d.innerHTML=`<strong>Stockage saturé.</strong> Vos modifications ne sont plus enregistrées.
-    <button class="btn btn-sm" onclick="exportAll()">Exporter une sauvegarde</button>
-    <button class="btn btn-sm" onclick="go('donnees')">Voir les données</button>`;
+  d.innerHTML=(introuvable
+      ? `<strong>Données introuvables.</strong> Par sécurité, plus rien n'est enregistré tant que la situation n'est pas réglée.`
+      : `<strong>Stockage saturé.</strong> Vos modifications ne sont plus enregistrées.`)
+    +` <button class="btn btn-sm" onclick="exportAll()">Exporter une sauvegarde</button>`
+    +` <button class="btn btn-sm" onclick="go('donnees')">Voir les données</button>`;
   document.body.appendChild(d);
+  document.body.classList.add('has-storage-alert');
 }
 function ssRaw(k,v){try{localStorage.setItem(k,v);}catch(e){}}
 function lsRaw(k){try{return localStorage.getItem(k)||'';}catch(e){return '';}}
@@ -2991,8 +3041,8 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.14.0';
-const APP_DATE    = '2026-09-21';
+const APP_VERSION = '1.14.1';
+const APP_DATE    = '2026-09-26';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
@@ -3124,6 +3174,7 @@ async function persist(){
     idbSet(LS.importedRefs, [...importedRefsSet]),
     idbSet('fa_photos', photos),
   ]).then(()=>{
+    noterEffectifs();
     if(dot)dot.style.background='#2D6A4F';
     if(lbl)lbl.textContent='Sauvegardé '+new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
     return true;
@@ -10101,7 +10152,7 @@ Store charge le même contenu.</p>
 sert qu'à vérifier les mises à jour.</p>
 
 <h4>Données de démonstration</h4>
-<p>Au premier lancement, NesFactura propose de démarrer avec des données d'exemple pour explorer les fonctionnalités.</p>`
+<p>Au premier lancement, l'application s'ouvre sur un catalogue vide : créez votre premier article, ou importez directement un export eBay, Etsy ou PayPal depuis <strong>Données</strong>.</p>`
   },
   {
     icon:'\u2139', title:'Version & historique',
@@ -10129,6 +10180,39 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.14.1 &mdash; 26 septembre 2026</h4>
+<p><strong>Corrections importantes sur téléphone et au premier lancement</strong></p>
+<ul>
+<li><strong>Fausse alerte de perte de données.</strong> À partir de la deuxième
+ouverture, une installation neuve signalait à tort des données introuvables, affichait
+le bandeau rouge et <em>bloquait alors tout enregistrement</em>. La détection ne repose
+plus sur le fait qu'une migration a eu lieu — y compris une migration de zéro
+enregistrement — mais sur les effectifs réellement enregistrés lors de la dernière
+sauvegarde réussie. Une base qui n'a jamais rien contenu ne déclenche plus rien ; une
+base qui contenait des données et revient vide alerte toujours.</li>
+<li><strong>Échec silencieux au tout premier démarrage.</strong> Un appel subsistait vers
+une fonction supprimée : l'initialisation s'interrompait avant la fin, sans rien
+afficher. Message d'accueil, instantané de démarrage et rappel de sauvegarde ne
+s'exécutaient pas.</li>
+<li><strong>Bandeau d'alerte recouvrant le message d'accueil.</strong> La case « ne plus
+afficher » et le bouton « Commencer » étaient inaccessibles sur téléphone.</li>
+<li><strong>Notifications illisibles sur petit écran.</strong> La bulle se positionnait sur
+la largeur du menu latéral, absent sur mobile : elle sortait de l'écran et se réduisait
+à une colonne d'un mot par ligne.</li>
+<li><strong>Double démarrage au premier passage.</strong> L'application se rechargeait
+inutilement quand le service worker prenait la main pour la première fois. Le
+rechargement est désormais réservé aux vraies mises à jour.</li>
+</ul>
+<p>Deux messages distincts remplaçent l'unique « Stockage saturé » : un stockage plein et
+des données introuvables n'appellent pas la même réaction.</p>
+<p><strong>Site de vente</strong></p>
+<ul>
+<li>Un bouton « Essayer gratuitement » ouvre directement l'application dans le
+navigateur, sans installation : l'essai ne demande plus Windows ni le Microsoft Store,
+qui devient une option d'installation parmi d'autres</li>
+<li>Nouvelle question fréquente sur les appareils compatibles</li>
+</ul>
 
 <h4>1.14.0 &mdash; 21 septembre 2026</h4>
 <p><strong>Import PayPal des dépenses</strong></p>
@@ -10636,9 +10720,17 @@ document.querySelectorAll('.overlay').forEach(ov=>{
           })
           .catch(()=>{ /* sw.js absent : app utilisable, cache offline inactif */ });
 
-        // Recharger une seule fois quand le nouveau SW prend la main
+        // Recharger une seule fois quand un NOUVEAU worker remplace l'ancien.
+        //
+        // Au tout premier passage il n'y a pas encore de contrôleur : le worker
+        // qui vient de s'installer prend la main et déclenche malgré tout
+        // « controllerchange ». Recharger à ce moment-là n'apporte rien — la
+        // page affichée est déjà la bonne — et fait tout exécuter deux fois,
+        // démarrage compris, avec un clignotement pour le premier visiteur.
+        const _avaitUnControleur = !!navigator.serviceWorker.controller;
         let _reloading=false;
         navigator.serviceWorker.addEventListener('controllerchange',()=>{
+          if(!_avaitUnControleur)return;   // première installation : rien à recharger
           if(_reloading)return;
           _reloading=true;
           location.reload();
@@ -11161,15 +11253,19 @@ async function initApp(){
   // « vidée depuis » se ressemblent. Un indicateur pose la différence — sans
   // lui, l'application conclurait à l'absence de données et enregistrerait
   // ce vide par-dessus ce qui subsiste.
-  const dejaMigre = lsRaw('fa_idb_ready')==='1';
+  // fa_idb_ready ne dit que « la migration a eu lieu » — y compris une
+  // migration de zéro enregistrement, au tout premier lancement. Il ne peut
+  // donc pas servir à détecter une perte. Les effectifs, eux, le peuvent.
+  const vus = lireEffectifs();
 
   if(idbArts===null){articles=ls(LS.art,[]);if(articles.length)console.log('[migrate] articles→IDB:',articles.length);}
   else articles=idbArts;
   if(idbInvs===null){invoices=ls(LS.inv,[]);if(invoices.length)console.log('[migrate] factures→IDB:',invoices.length);}
   else invoices=idbInvs;
 
-  // Base déclarée opérationnelle mais revenue vide : anomalie, pas un premier lancement
-  if(dejaMigre && !articles.length && !invoices.length){
+  // Une base qui a déjà porté des enregistrements et revient vide : anomalie.
+  // Une base qui n'en a jamais porté : premier lancement, rien à signaler.
+  if((vus.art+vus.inv)>0 && !articles.length && !invoices.length){
     console.error('[alerte] la base interne est vide alors qu\'elle avait été renseignée');
     _baseSuspecte=true;
     // Un instantané récent permet de repartir sans sauvegarde manuelle
@@ -11191,8 +11287,12 @@ async function initApp(){
         notify('⚠️ Vos données sont introuvables et aucun instantané n\'est disponible. '
           +'Restaurez votre dernière sauvegarde depuis Données → Import.',false);
       }
-      try{ showStorageAlert(); }catch(_){}
+      try{ showStorageAlert('introuvable'); }catch(_){}
     },600);
+  } else if(articles.length||invoices.length){
+    // Repère posé dès le chargement : un utilisateur déjà installé est
+    // protégé sans attendre sa première sauvegarde de la session.
+    noterEffectifs();
   }
   if(idbRefs===null)importedRefsSet=new Set(ls(LS.importedRefs,[]));
   else importedRefsSet=new Set(idbRefs);
@@ -11247,8 +11347,7 @@ async function initApp(){
   const ld=getLicenseData();
   const ki=document.getElementById('p-license-key');
   if(ki&&ld.key)ki.value=ld.key;
-  const isFirstRun=!localStorage.getItem(LS.params)&&invoices.length===0&&articles.length===0;
-  if(isFirstRun){showWelcomeScreen();}else{go('articles');}
+  go('articles');
   // Message d'accueil mobile, après l'affichage de l'écran initial
   setTimeout(maybeShowWelcome,400);
 }

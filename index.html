@@ -2520,6 +2520,15 @@ body.has-storage-alert{padding-bottom:96px;}
           Crée automatiquement dans le catalogue tous les articles présents dans les factures (ventes et achats) qui n'y figurent pas encore. Utile lors d'une migration ou si des articles ont été saisis directement dans les lignes de facture sans passer par le catalogue.
         </p>
         <button class="btn btn-primary" onclick="syncArticlesFromInvoices()">🔄 Créer les articles et tiers manquants depuis les factures</button>
+        <p style="font-size:13px;color:var(--ink3);margin:18px 0 14px;line-height:1.6;padding-top:16px;border-top:1px solid var(--ivory3)">
+          <strong style="color:var(--ink2)">Rattacher les lignes par référence canal de vente.</strong>
+          Quand un import ne reconnaît pas un article, il en crée un nouveau : si le vôtre
+          existait déjà sous un autre libellé, vos lignes pointent vers le doublon. Ajoutez la
+          référence eBay ou Etsy dans la bonne fiche, puis lancez ce recalcul : tout l'historique
+          est redirigé vers elle. Seul le lien vers la fiche change — libellés, quantités et
+          montants des documents restent intacts, y compris sur les documents verrouillés.
+        </p>
+        <button class="btn" onclick="relierToutesLesLignes()">🔗 Recalculer les rattachements d'articles</button>
       </div>
 
       <div class="card-title" style="color:var(--red)"><span class="ct-icon">🗑</span> Zone de danger — Réinitialisation sélective</div>
@@ -3041,8 +3050,8 @@ function nextId(){return Date.now()*1000+((_idCounter++)%1000);}
 //    mineur   : nouvelle fonctionnalité
 //    correctif: correction de bug
 // ══════════════════════════════════════════════════════════
-const APP_VERSION = '1.14.1';
-const APP_DATE    = '2026-09-26';
+const APP_VERSION = '1.14.2';
+const APP_DATE    = '2026-10-01';
 
 const DATA_VERSION = 1; // ← incrémenter à chaque changement de schéma
 
@@ -3824,17 +3833,101 @@ function saveArticle(){
     platformRefs:(editArtPlatformRefs||[]).filter(r=>r.ref),
     nomenclature,
   };
+  let idEnregistre=editArtId;
   if(editArtId){
     const i=articles.findIndex(x=>x.id===editArtId);
     if(i>=0)articles[i]={...articles[i],...data};
     notify('Article modifié');
   } else {
-    articles.push({id:seq.art++,...data});
+    const nouveau={id:seq.art++,...data};
+    articles.push(nouveau);
+    idEnregistre=nouveau.id;
     notify('Article ajouté');
   }
+  // Les références plateforme de CETTE fiche viennent peut-être d'être
+  // ajoutées : on rattache aussitôt les lignes de l'historique qui les
+  // portent. Le message ne s'affiche que s'il y a eu quelque chose à faire,
+  // pour ne pas parasiter chaque enregistrement.
+  const rattach=relierParRefPlateforme(idEnregistre);
   persist();closeModal('modal-art');renderArticles();
+  if(rattach.lignes)setTimeout(()=>messageRattachement(rattach,true),1200);
 }
 
+
+// ════════════════════════════════════════
+// RATTACHEMENT DES LIGNES PAR RÉFÉRENCE PLATEFORME
+// ════════════════════════════════════════
+//
+// Un import qui ne reconnaît pas un article en crée un nouveau. Si le
+// vôtre existait déjà sous un autre libellé, vous obtenez un doublon et
+// vos lignes pointent vers lui. Ajouter ensuite la référence plateforme
+// dans la bonne fiche ne corrigeait rien : l'historique continuait de
+// désigner le doublon, et les statistiques par article restaient fausses.
+//
+// Ce rattachement répare l'historique. Il ne modifie QUE le lien vers la
+// fiche (`aid`) : ni le libellé, ni la référence imprimée, ni la quantité,
+// ni le prix. Un document verrouillé ressort donc rigoureusement
+// identique — c'est ce qui permet de le corriger sans le déverrouiller.
+function relierParRefPlateforme(filtreArtId){
+  const index=new Map();
+  articles.forEach(a=>{
+    if(filtreArtId!=null&&a.id!==filtreArtId)return;
+    (a.platformRefs||[]).forEach(r=>{
+      if(!r||!String(r.ref||'').trim())return;
+      // La référence est portée par un canal : deux plateformes peuvent
+      // employer le même identifiant sans désigner le même objet.
+      index.set(String(r.platform||'')+'\u0000'+String(r.ref).trim(),a);
+    });
+  });
+  if(!index.size)return {lignes:0,docs:0,orphelins:[]};
+
+  const perdues=new Map();   // article quitté → nombre de lignes perdues
+  let lignes=0; const docs=new Set();
+  invoices.forEach(inv=>{
+    const plat=String(inv.platform||'');
+    (inv.lines||[]).forEach(l=>{
+      if(!l||!String(l.platRef||'').trim())return;
+      const a=index.get(plat+'\u0000'+String(l.platRef).trim());
+      if(!a||l.aid===a.id)return;
+      if(l.aid!=null&&l.aid!==undefined)perdues.set(l.aid,(perdues.get(l.aid)||0)+1);
+      l.aid=a.id;
+      lignes++; docs.add(inv.id);
+    });
+  });
+
+  // Articles qui ne sont plus cités par aucune ligne : signalés, jamais
+  // supprimés — une suppression automatique n'a pas sa place ici.
+  const orphelins=[];
+  perdues.forEach((n,aid)=>{
+    const encoreUtilise=invoices.some(inv=>(inv.lines||[]).some(l=>l.aid===aid));
+    if(encoreUtilise)return;
+    const a=articles.find(x=>x.id===aid);
+    if(a)orphelins.push(a);
+  });
+  return {lignes,docs:docs.size,orphelins};
+}
+
+// Compte rendu commun aux deux points d'entrée.
+function messageRattachement(r,silencieuxSiRien){
+  if(!r.lignes){
+    if(!silencieuxSiRien)notify('Aucune ligne à rattacher — tout est déjà à jour.');
+    return;
+  }
+  let msg='✅ '+r.lignes+' ligne'+(r.lignes>1?'s':'')+' rattachée'+(r.lignes>1?'s':'')
+         +' dans '+r.docs+' document'+(r.docs>1?'s':'');
+  if(r.orphelins.length){
+    const noms=r.orphelins.map(a=>'« '+a.name+' »').join(', ');
+    msg+=' · '+(r.orphelins.length>1?'ces articles ne sont plus utilisés : ':'cet article n\'est plus utilisé : ')+noms;
+  }
+  notify(msg);
+}
+
+// Point d'entrée global, depuis l'écran Données.
+function relierToutesLesLignes(){
+  const r=relierParRefPlateforme(null);
+  if(r.lignes){ persist(); renderArticles(); }
+  messageRattachement(r,false);
+}
 
 function syncArticlesFromInvoices(){
   let createdArts=0, createdTiers=0;
@@ -9999,6 +10092,21 @@ d'expédition complet.</p>
 <p>Chaque transaction est identifiée par une clé unique — pour PayPal, le numéro de
 transaction. Réimporter le même fichier, ou deux périodes qui se chevauchent, ne crée
 pas de doublons.</p>
+<h4>Articles créés en double, et comment les réparer</h4>
+<p>Un import cherche l'article d'abord par sa <strong>référence canal de vente</strong>, puis par
+son <strong>nom exact</strong>. S'il ne trouve ni l'une ni l'autre, il crée un nouvel article. Un
+article que vous aviez saisi sous un libellé différent de celui de la plateforme produit donc
+un doublon, et vos ventes se répartissent entre les deux fiches.</p>
+<p>La réparation tient en un geste : ouvrez <strong>votre</strong> fiche article, ajoutez-y la
+référence du canal (l'identifiant de l'objet eBay ou de l'annonce Etsy), et enregistrez.
+Toutes les lignes de l'historique qui portent cette référence sont rattachées à votre fiche,
+y compris dans les documents déjà verrouillés.</p>
+<p>Depuis <strong>Données</strong>, le bouton <strong>Recalculer les rattachements d'articles</strong>
+fait la même chose sur l'ensemble du catalogue en une fois.</p>
+<p class="doc-note">Seul le lien vers la fiche est modifié. Les libellés, références imprimées,
+quantités et montants des documents restent intacts : un document verrouillé s'imprime
+exactement comme au jour de sa validation. L'ancien article, s'il n'est plus cité par aucune
+ligne, vous est signalé — à vous de le supprimer ou non depuis le catalogue.</p>
 <h4>Import générique CSV</h4>
 <p>Format libre pour importer des factures depuis d'autres sources. Voir le modèle téléchargeable dans Données.</p>`
   },
@@ -10180,6 +10288,29 @@ un bandeau vous propose de l'appliquer \u2014 vous choisissez le moment.
 Vos donn\u00e9es ne sont jamais affect\u00e9es : elles restent sur votre appareil et sont
 migr\u00e9es automatiquement si le format \u00e9volue.
 </p>
+
+<h4>1.14.2 &mdash; 1er octobre 2026</h4>
+<p><strong>Rattachement des lignes par référence canal de vente</strong></p>
+<p>Quand un import rencontre un article qu'il ne reconnaît pas, il en crée un nouveau. Si le
+vôtre existait déjà au catalogue sous un libellé différent, vous obteniez un doublon, et
+vos lignes de facture pointaient vers lui. Ajouter ensuite la référence eBay ou Etsy dans la
+bonne fiche ne corrigeait rien : l'historique continuait de désigner le doublon et vos
+statistiques par article restaient fausses.</p>
+<ul>
+<li><strong>À l'enregistrement d'une fiche article</strong>, les lignes de l'historique portant
+ses références canal sont rattachées à elle. Rien ne s'affiche s'il n'y avait rien à faire</li>
+<li><strong>Un bouton « Recalculer les rattachements d'articles »</strong>, dans Données,
+balaie tout l'historique d'un coup — utile après plusieurs corrections ou l'import d'une
+ancienne sauvegarde</li>
+<li>Le <strong>canal fait partie de la clé</strong> : une même référence sur eBay et sur Etsy
+ne désigne pas le même objet et n'est jamais confondue</li>
+<li>Un article qui ne serait plus cité par aucune ligne vous est <strong>signalé</strong>,
+jamais supprimé</li>
+</ul>
+<p><strong>Seul le lien vers la fiche change.</strong> Ni le libellé, ni la référence imprimée,
+ni la quantité, ni le prix, ni le numéro, ni la date. Un document verrouillé ressort donc
+rigoureusement identique — c'est précisément ce qui permet de corriger l'historique clôturé
+sans le déverrouiller, et vos totaux ne bougent pas d'un centime.</p>
 
 <h4>1.14.1 &mdash; 26 septembre 2026</h4>
 <p><strong>Corrections importantes sur téléphone et au premier lancement</strong></p>
